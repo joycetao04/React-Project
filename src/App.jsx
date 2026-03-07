@@ -10,6 +10,9 @@ import DailyArtworkPage from './pages/dailyartworkpage/DailyArtworkPage.jsx';
 import ArticlePage from './pages/articlepage/ArticlePage.jsx';
 import ArtThreadsPage from './pages/artthreadspage/ArtThreadsPage.jsx';
 
+// JOYCE
+import uploadFile from "./JOYCE/uploadFile.jsx";
+
 
 ///////images
 import DailyArtwork from './assets/DailyArtwork.png'
@@ -39,6 +42,10 @@ function App() {
             <Route path="/DailyArtworkPage" element={<DailyArtworkPage />} />
             <Route path="/ArticlePage" element={<ArticlePage />} />
             <Route path="/ArtThreadsPage" element={<ArtThreadsPage />} />
+
+            
+            <Route path="/joyce" element={<uploadFile />} />
+
             
           </Routes>
         </div>
