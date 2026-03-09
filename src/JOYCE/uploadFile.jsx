@@ -7,6 +7,8 @@ function UploadFile() {
     const fileInputRef = useRef(null);
 
     const [dragging, setDragging] = useState(false);
+    const [progress, setProgress] = useState(0);
+
     const [fileName, setFileName] = useState("");
     const [file, setFile] = useState(null);
 
@@ -43,6 +45,19 @@ function UploadFile() {
         }
 
         return true;
+    };
+
+    const getFileIcon = () => {
+        if (!fileName) return "↥";
+      
+        const ext = fileName.split(".").pop().toLowerCase();
+      
+        if (ext === "pdf") return "📄";
+        if (ext === "doc" || ext === "docx") return "📝";
+        if (ext === "xls" || ext === "xlsx") return "📊";
+        if (ext === "ppt" || ext === "pptx") return "📑";
+      
+        return "📁";
     };
 
     const handleClick = () => {
@@ -86,6 +101,30 @@ function UploadFile() {
         const formData = new FormData();
         formData.append("file", file);
 
+        // XMLHttpRequest for Upload Progress bar
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "http://localhost:8000/upload");
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                setProgress(percent);
+            }
+        };
+
+        xhr.onload = () => {
+            console.log("Upload complete");
+        };
+
+        xhr.onerror = () => {
+            console.error("Upload failed");
+        }
+
+        xhr.send(formData);
+
+        // Fetch for no upload progress
+        /* 
         try {
             const response = await fetch("http://localhost:8000/upload", {
                 method: "POST",
@@ -98,6 +137,7 @@ function UploadFile() {
         } catch (error) {
             console.error("Upload failed:", error);
         }
+        */
     };
 
     return (
@@ -137,7 +177,7 @@ function UploadFile() {
                                 onDragLeave={handleDragLeave}>
 
                                 <div className="upload-icon-circle">
-                                    <div className="upload-arrow">↥</div>
+                                    <div className="upload-arrow">{getFileIcon()}</div>
                                 </div>
 
                                 <div className="upload-main-text">Click to browse or drag and drop</div>
@@ -146,6 +186,15 @@ function UploadFile() {
 
                                 {fileName && (
                                     <div className="upload-file-name">Selected file: {fileName}</div>
+                                )}
+
+                                {progress > 0 && (
+                                    <div className="upload-progress">
+                                        <div
+                                            className="upload-progress-bar"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </div>
                                 )}
                             </div>
 
