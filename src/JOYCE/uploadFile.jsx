@@ -1,16 +1,19 @@
 import { useState, useRef } from "react";
 import "./uploadFile.css";
 
-function uploadFile() {
+function UploadFile() {
     const [showModal, setShowModal] = useState(false);
 
     const fileInputRef = useRef(null);
 
     const [dragging, setDragging] = useState(false);
     const [fileName, setFileName] = useState("");
+    const [file, setFile] = useState(null);
 
     const clearFile = () => {
         setFileName("");
+        setFile(null);
+
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
@@ -21,7 +24,7 @@ function uploadFile() {
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadshetml.sheet",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/vnd.ms-powerpoint",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     ];
@@ -51,6 +54,7 @@ function uploadFile() {
 
         if (validateFile(file)) {
             setFileName(file.name);
+            setFile(file);
         }
     }
     const handleDrop = (event) => {
@@ -62,6 +66,7 @@ function uploadFile() {
 
         if (validateFile(file)) {
             setFileName(file.name);
+            setFile(file);
         }
     }
     const handleDragOver = (event) => {
@@ -71,6 +76,29 @@ function uploadFile() {
     const handleDragLeave = () => {
         setDragging(false);
     }
+
+    const uploadToBackend = async () => {
+        if (!file) {
+            alert("No file selected");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("http://localhost:8000/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            console.log("AI response:", data);
+        } catch (error) {
+            console.error("Upload failed:", error);
+        }
+    };
 
     return (
         <div className="upload-demo-page">
@@ -131,7 +159,12 @@ function uploadFile() {
                                     Cancel
                                 </button>
 
-                                <button className="upload-done-btn">Done</button>
+                                <button 
+                                className="upload-done-btn"
+                                onClick={uploadToBackend}
+                                >
+                                    Done
+                                </button>
                             </div>
 
                             <input
@@ -148,4 +181,4 @@ function uploadFile() {
     );
 }
 
-export default uploadFile;
+export default UploadFile;
