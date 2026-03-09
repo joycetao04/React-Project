@@ -11,7 +11,8 @@ import ArticlePage from './pages/articlepage/ArticlePage.jsx';
 import ArtThreadsPage from './pages/artthreadspage/ArtThreadsPage.jsx';
 
 // JOYCE
-import uploadFile from "./JOYCE/uploadFile.jsx";
+import UploadFile from "./JOYCE/uploadFile.jsx";
+import SearchPopup from "./JOYCE/searchPopup.jsx"
 
 
 ///////images
@@ -44,7 +45,8 @@ function App() {
             <Route path="/ArtThreadsPage" element={<ArtThreadsPage />} />
 
             
-            <Route path="/joyce" element={<uploadFile />} />
+            <Route path="/upload" element={<UploadFile />} />
+            <Route path="/searchPopup" element={<SearchPopup />} />
 
             
           </Routes>
