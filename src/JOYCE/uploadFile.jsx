@@ -3,11 +3,11 @@ import "./uploadFile.css";
 
 function UploadFile() {
     const [showModal, setShowModal] = useState(false);
-
-    const fileInputRef = useRef(null);
-
     const [dragging, setDragging] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [closing, setClosing] = useState(false);
+
+    const fileInputRef = useRef(null);
 
     const [fileName, setFileName] = useState("");
     const [file, setFile] = useState(null);
@@ -19,6 +19,16 @@ function UploadFile() {
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
         }
+    };
+
+    const closeModal = () => {
+        setClosing(true);
+
+        setTimeout(() => {
+            setShowModal(false);
+            setClosing(false);
+            clearFile();
+        }, 200);
     };
 
     const allowedTypes = [
@@ -150,7 +160,7 @@ function UploadFile() {
                 <div className="upload-overlay">
                     <div className="upload-modal">
 
-                        <div className="upload-modal-card">
+                        <div className={`upload-modal-card ${closing ? "modal-closing" : ""}`}>
                             <div className="upload-modal-header">
                                 <div className="upload-modal-title-group">
                                     <h2>Upload Documents</h2>
@@ -159,9 +169,7 @@ function UploadFile() {
 
                                 <button
                                 className="upload-close-btn"
-                                onClick={() => {
-                                    setShowModal(false); clearFile();
-                                }}
+                                onClick={closeModal}
                                 aria-label="Close"
                                 >
                                     ×
@@ -201,9 +209,7 @@ function UploadFile() {
                             <div className="upload-footer">
                                 <button
                                 className="upload-cancel-btn"
-                                onClick={() => {
-                                    setShowModal(false); clearFile();
-                                }}
+                                onClick={closeModal}
                                 >
                                     Cancel
                                 </button>
