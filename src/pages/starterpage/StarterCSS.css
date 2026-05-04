@@ -1,0 +1,291 @@
+.StarterHeader {
+  width: 100%;
+  position: relative;
+  margin: 0 0 50px 0;
+  overflow: hidden;
+}
+
+.StarterHeaderImg {
+  width: 100%;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#StarterHeaderH1 {
+    position: absolute;
+    top: 5%; 
+    left: 5%;
+    color: #f2ece8;
+    font-family: "Anton", sans-serif;
+    font-size: clamp(5rem, 6vw, 8em);;
+}
+#StarterHeaderH4{
+    position: absolute;
+    top: 55%; 
+    left: 5%;
+    color: #f2ece8;
+    font-size: clamp(2rem, 2.5vw, 8em);
+}
+
+/**Intro**/
+
+.StarterIntor{
+    background-color: #eae1d9;
+    border-radius: 15px;
+    margin: 93px 138.5px 60px 138.5px;
+    
+}
+
+#StarterIntorH1{
+    padding-top: 37.5px;
+    padding-bottom: 50px;
+}
+
+#smallIntro{
+    color: #a89790;
+    font-size: 2em;
+    margin: 37.5px 0px 71px 41.6px;
+    
+}
+
+#mainTitle{
+    color: #b3796d;
+    font-family: "Anton", sans-serif;
+    font-size: 2em;
+   
+}
+
+#StarterIntorP{
+    margin: 0px 61.3px 56px 61.3px;
+    font-size: 1.4em;
+    color: #a89790;
+    text-align: center;
+}
+
+#StarterIntorImg{
+    display: block;
+    
+    width: 100%;
+    max-width: 900px;
+    height: auto;
+    margin: 56px auto 80px auto;
+    padding-bottom: 80px;
+    padding-left: 30px;
+    padding-right: 30px;
+    border-radius: 30px;
+    
+}
+
+/**Learn More Description**/
+
+#LearnMoreH1{
+    
+    padding: 0px 419px 40px 180px;
+}
+
+.SmallLearnMoreTitile{
+    color: #a89790;
+    font-size: 1.5em;
+}
+
+.MainLearnMoreTitile{
+    color: #b3796d;
+    font-family: "Anton", sans-serif;
+    font-size: 1.5em;
+}
+
+#LearnMoreP{
+    text-align: center;
+    font-size: 1.4em;
+    padding: 0px 198px 32.5px 198px;
+}
+
+.GreyLearnMoreP{
+    color: #a89790;
+}
+
+.BrownLearnMoreP{
+    font-family: "Anton", sans-serif;
+    color: #b3796d;
+}
+
+#LearnMoreButton{
+    display: flex;
+    background-color: #b3796d;
+    justify-content: center;
+    border-radius: 20px;
+    font-size: 1.2em;
+    font-family: "Anton", sans-serif;
+    color: #f2ece8;
+    padding: 5px 25px 5px 25px;
+    margin: 0 auto; /* centers horizontally */
+    border: 1px solid rgba(255, 255, 255, 0); /* optional border */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#LearnMoreImg{
+    display: flex;
+    padding: 58px 0px 134px 0px;
+    margin: 0 auto;
+    border-radius: 50px;
+    max-width: 800px;
+}
+
+/**Read More Section**/
+
+.Read_More_Description{
+    background-color: #eae1d9;
+    margin: 0px 136.5px 66px 136.5px;
+    border-radius: 15px;
+    padding-bottom: 26.5px;
+}
+
+#LearnMoreTitle{
+    padding: 37.5px 0px 10px 41.6px;
+    font-size: 4em;
+}
+
+.Read_More_Header1{
+    font-family: "Anton", sans-serif;
+    color: #b3796d;
+}
+
+.Read_More_Header2{
+    color: #a89790;
+}
+
+.ReadMoreP{
+    display: flex;
+    padding: 0px 41.6px 0px 41.6px;
+    color: #a89790;
+    font-size: 1.4em;
+}
+
+.ReadMoreButton{
+    display: block;              /* block enables margin auto */
+    background-color: #b3796d;
+    border-radius: 20px;
+    font-size: 1.2em;
+    font-family: "Anton", sans-serif;
+    color: #f2ece8;
+    padding: 5px 25px;
+    margin: 0 auto;  /* top:0, right:auto, bottom:26.7px, left:auto */
+    margin-top: 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/**Resources Section**/
+
+.Resources_Flex_Box{
+    display: flex;
+    justify-content: space-evenly;
+    padding: 50px;
+}
+
+.Curated_Resources{
+    background-color: #eae1d9;
+    color: #b3796d;
+    padding: 25px 31.6px;
+    border-radius: 20px;
+    margin: 0px 0px 131px 0px;
+
+}
+
+.ResourceLeftH2{
+    font-family: "Anton", sans-serif;
+    font-size: 3em;
+    padding-bottom: 20px;
+}
+
+#ResourceListLeft{
+    padding-left: 20px;
+}
+
+#ResourceListLeft li{
+    padding-bottom: 10px;
+}
+
+.Cite_Right{
+    background-color: #d3b3ab;
+    color: #f2ece8;
+    padding: 25px 170px 25px 31.6px;
+    border-radius: 20px;
+    margin: 0px 0px 131px 0px;
+}
+
+.ResourceRightH2{
+    font-family: "Anton", sans-serif;
+    font-size: 3em;
+    padding-bottom: 20px;
+}
+
+#ResourceListRight{
+    padding-left: 20px;
+}
+
+#ResourceListRight li{
+    padding-bottom: 10px;
+}
+
+/** Media Queries */
+
+@media (max-width: 800px) {
+    .swiper-slide-active{
+        width: 500px;
+    }
+}
+
+@media (max-width: 650px) {
+    .swiper-slide-active{
+        width: 400px;
+    }
+    .artthreads-wrapper .text-box p {
+        font-size: 0.9rem;
+    }
+
+    .artthreads-wrapper .category span {
+        font-size: 0.8 rem;
+        padding: 3px 8px;
+    };
+
+    .artthreads-wrapper button {
+        font-size: 0.8rem;
+        padding: 7px 14px;
+
+    }
+
+
+}
+
+@media (max-width: 520px) {
+    .swiper-slide-active{
+        width: 300px;
+    }
+
+    .artthreads-wrapper .title h1 {
+        font-size: 2rem;
+    }
+
+    .artthreads-wrapper .text-box p {
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+    .artthreads-wrapper .category {
+        gap: 5px;
+    }
+
+    .artthreads-wrapper .category span {
+        font-size: 0.7rem;
+        padding: 2px 5px;
+    }
+
+    .artthreads-wrapper button {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+    }
+}
