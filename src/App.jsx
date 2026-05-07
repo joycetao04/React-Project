@@ -10,7 +10,8 @@ import DailyArtworkPage from './pages/dailyartworkpage/DailyArtworkPage.jsx';
 import ArticlePage from './pages/articlepage/ArticlePage.jsx';
 import ArtThreadsPage from './pages/artthreadspage/ArtThreadsPage.jsx';
 
-
+////////////////// New
+import CanvasPage from "./Canvas_Workspace/Canvas_Board.jsx";
 ///////images
 import DailyArtwork from './assets/DailyArtwork.png'
 import ArtMap from './assets/ArtMap.png'
@@ -26,12 +27,12 @@ function App() {
     return(
       
       <Router>
-        <div className='HomeColor'>
+        <div>
           
           <Routes>
             <Route path="/" element={
               <>
-                <HomePage></HomePage>
+                <CanvasPage/>
               </>
             } />
             <Route path="/" element={<HomePage />} />

@@ -1,0 +1,876 @@
+.Canvas_Page {
+    width: 98%; /*Can change the overall page size*/
+    height: calc(100vh - 10px);
+    margin: 5px auto;
+    background-color: white;
+    border: 3px solid #222;
+    overflow: hidden;
+
+}
+
+.Canvas_Main {
+    height: calc(100% - 90px);
+    position: relative;
+    min-height: 0;
+    background-color: #fafafa;
+    overflow: hidden;
+}
+
+.Database_Button {
+    position: absolute;
+    top: 30px;
+    left: 64px;
+    z-index: 5;
+
+    height: 48px;
+    padding: 0px 28px;
+    background-color: #424242;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.50);
+    border-radius: 6px;
+    color: white;
+    border: none;
+    
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.Database_Button:hover {
+    background-color: #252525;
+    color: rgb(225, 223, 223);
+}
+
+.Canvas_Left {
+    position: absolute;
+    left: 0;
+    top: 110px;
+
+    height: calc(100% - 110px);
+    
+
+    background-color: white;
+    border: none;
+    border-top-right-radius: 120px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.50);
+
+    padding: 64px 24px 24px 24px;
+    box-sizing: border-box;
+    z-index: 20; /*Layer index is 2*/
+
+    transition: width 0.25s ease, flex-basis 0.25s ease, padding 0.25s ease;
+    overflow: visible;
+}
+
+.Canvas_Left_Open {
+    width: 329px;
+}
+
+.Canvas_Left_Closed {
+    width: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.DoubleLeft {
+    margin: 3.5px 0px 0px 0px;
+}
+
+.DoubleRight {
+    margin: 3.5px 0px 0px 0px;
+}
+
+.Cabinet_Toggle_Button {
+    position: absolute;
+    top: 18px;
+    right: -36px;
+    width: 32px;
+    height: 32px;
+
+    border: none;
+    border-radius: 6px;
+    background-color: #eeeeee;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+
+    cursor: pointer;
+    z-index: 100;
+}
+
+.Cabinet_Toggle_Button:hover {
+    background-color: #dddddd;
+}
+
+.Canvas_Center {
+    flex: 1;
+    position: absolute;
+    inset: 0;
+
+    overflow: hidden;
+    padding: 24px;
+    
+    cursor: grab;
+
+    background-color: #fafafa;
+    background-image: radial-gradient(circle, #cfd8df 1.2px, transparent 1.2px); /*Here is where I have the Dot Grid, now I set the page to be many dots of 1.2px and add a transparent to it*/
+    background-size: 14px 14px; /*This means repeat every 14px by 14px*/
+}
+
+.Canvas_Center:active {
+    cursor: grabbing;
+}
+
+.Canvas_Right {
+    position: absolute;
+    right: 0;
+    top: 0;
+
+    height: 100%;
+    background-color: white;
+    
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.50);
+    padding: 24px;
+    box-sizing: border-box;
+    z-index: 20; /*Layer index is 20*/
+
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease, flex-basis 0.25s ease, padding 0.25s ease;
+    overflow: visible;
+}
+
+.Canvas_Right_Open {
+    width: 800px;
+}
+
+.Canvas_Right_Closed {
+    width: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.Chat_Toggle_Button {
+    position: absolute;
+    top: 24px;
+    left: -40px;
+    width: 32px;
+    height: 32px;
+
+    border: none;
+    border-radius: 6px;
+    background-color: #eeeeee;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+
+    cursor: pointer;
+    z-index: 100;
+}
+
+.Chat_Toggle_Button:hover {
+    background-color: #dddddd;
+}
+
+/******************************************************************************/
+/* Here are the css for the Left side*/
+.Cabinet_Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding-bottom: 28px;
+    border-bottom: 1px solid #0000000D;
+}
+
+.Cabinet_Header h2 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 20px;
+    color: #222;
+}
+
+.Cabinet_Add_Button {
+    background: none;
+    border: none;
+    font-size: 25px;
+    font-weight: 300;
+    width: 40px;
+    cursor: pointer;
+    color: #222;
+    margin: 0px 50px 0px 0px;
+}
+
+.Cabinet_Add_Button:hover {
+    border-radius: 10%;
+    background-color: #eeeeee;
+}
+
+/*Here is the list of the files and scrollbar for the list*/
+.Cabinet_File_List {
+    margin-top: 20px;
+    height: calc(100% - 70px);
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.Cabinet_File_List::-webkit-scrollbar {
+    width: 6px;
+}
+
+.Cabinet_File_List::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Cabinet_File_List::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 999px;
+}
+
+.Cabinet_File_List::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+/****************************************/
+
+.Cabinet_File_Row {
+    display: flex;
+    gap: 14px;
+    
+    padding: 18px 0px;
+    border-bottom: 1px solid #0000000D;
+    cursor: grab;
+}
+
+.Cabinet_File_Row:hover {
+    background-color: #0000000D;
+}
+
+.Cabinet_File_Row:active {
+    cursor: grabbing;
+}
+
+.Cabinet_File_Icon {
+    width: 18px;
+    padding-top: 4px;
+    color: #9a9a9a;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.Cabinet_File_Info {
+    flex: 1;
+    min-width: 0;
+}
+
+.Cabinet_File_Title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.25;
+    color: #222;
+    overflow: hidden;
+}
+
+.Cabinet_File_Meta {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    color: #a0a0a0;
+}
+
+.Cabinet_File_Size {
+    margin-right: 15px;
+}
+/******************************************************************************/
+/* Here are the css for the Center Canvas note Card */
+
+.Canvas_Note_Card {
+    position: absolute;
+    width: 185px;
+    min-height: 160px;
+
+    background-color: white;
+    border: 2px solid #00000014;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    padding: 18px 16px;
+    box-sizing: border-box;
+    cursor: grab;
+    user-select: none;
+    z-index: 2;
+}
+
+.Canvas_Note_Card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+}
+
+.Canvas_Note_Card:active {
+    cursor: grabbing;
+}
+
+.Canvas_Note_Selected {
+    background-color: #424242;
+    color: white;
+    border-color: #424242;
+}
+
+.Canvas_Note_Selected:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.Canvas_Note_Title {
+    margin: 0 0 14px 0;
+    font-size: 10px;
+    color: #9b9b9b;
+}
+
+.Canvas_Note_Body {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: inherit;
+}
+
+.Canvas_Note_Dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background-color: currentColor;
+    opacity: 0.65;
+
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.Canvas_World {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+}
+
+.Canvas_Link_Layer {
+    position: absolute;
+    inset: 0;
+    width: 5000px;
+    height: 5000px;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 1;
+}
+
+.Canvas_Link_Line {
+    stroke: #424242;
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.45;
+}
+
+/**********************************************************************/
+/* Here are the css for the Center Canvas bottom toolbar */
+
+.Canvas_Bottom_Toolbar {
+    position: absolute;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+
+    min-width: 450px;
+    height: 48px;
+
+    background-color: rgba(255, 255, 255, 0.92);
+    border: 1px solid #0000001A;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+
+    font-size: 13px;
+    color: #555;
+    z-index: 10;
+}
+
+.Canvas_Toolbar_Selected_Text {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.Canvas_Toolbar_Button {
+    border: none;
+    background: none;
+    color: #333;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.Canvas_Toolbar_Button:hover {
+    background-color: #eeeeee;
+}
+
+.Canvas_Zoom_Text {
+    min-width: 44px;
+    text-align: center;
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+    padding: 2.5px;
+    border: 1px solid #0000000D;
+    border-radius: 6px;
+    background-color: #0000000D;
+}
+
+.Canvas_Link_Count_Text {
+    min-width: 54px;
+    text-align: center;
+    font-size: 13px;
+    color: #555;
+}
+/**********************************************************************/
+/* Here are the css for the Right Chat Panel */
+
+.Chat_Header {
+    height: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #0000000D;
+}
+
+.Chat_Header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.71px;
+    color: #0A0A0A;
+}
+
+.Chat_Body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.Chat_Empty_Text {
+    width: 190px;
+    margin: 0px;
+
+    color: #9a9a9a;
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.Chat_Active_State {
+    width: 100%;
+    align-self: flex-start;
+}
+
+.Chat_Context_Text {
+    margin: 0px 0px 18px 0px;
+    color: #8a8a8a;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.Chat_Message {
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+
+    max-width: 90%;
+    box-sizing: border-box;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.Chat_Message_AI {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.Chat_Input_Bar {
+    height: 80px;
+    flex-shrink: 0;
+
+    border-top: 1px solid #0000000D;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 18px 0px 0px 0px;
+    box-sizing: border-box;
+}
+
+.Chat_Input {
+    flex: 1;
+    height: 40px;
+
+    border: none;
+    outline: none;
+    background-color: white;
+
+    font-size: 13px;
+    color: #222;
+}
+
+.Chat_Input::placeholder {
+    color: #b0b0b0;
+}
+
+.Chat_Input:disabled {
+    cursor: not-allowed;
+    color: #c0c0c0;
+}
+
+.Chat_Send_Button {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    padding-top: 5px;
+
+    border: none;
+    border-radius: 6px;
+    background-color: #eeeeee;
+
+    color: #333;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.Chat_Send_Button:hover:not(:disabled) {
+    background-color: #dddddd;
+}
+
+.Chat_Send_Button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/**************************************************************************************/
+.Chat_Message_List {
+    width: 100%;
+    height: 100%;
+    align-self: flex-start;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding-right: 4px;
+    box-sizing: border-box;
+}
+
+.Chat_Message_List::-webkit-scrollbar {
+    width: 6px;
+}
+
+.Chat_Message_List::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.Chat_Message_List::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 999px;
+}
+
+.Chat_Message_List::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+/**************************************************************************************/
+
+.Chat_Message_User {
+    background-color: #424242;
+    color: white;
+}
+
+.Chat_Message_AI {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.Chat_Message_Row {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.Chat_Message_Row_User {
+    align-items: flex-end;
+}
+
+.Chat_Message_Row_AI {
+    align-items: flex-start;
+}
+
+.Chat_Message_Label {
+    font-size: 11px;
+    color: #8a8a8a;
+    padding: 0px 4px;
+}
+
+/**********************************************************************/
+/* Here are the css for the Hover Preview Card */
+
+.Note_Preview_Card {
+    position: absolute;
+    width: 280px;
+    min-height: 360px;
+
+    background-color: #f5f5f5;
+    border: 1px solid #0000001A;
+    border-radius: 18px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.18);
+
+    padding: 26px;
+    box-sizing: border-box;
+
+    z-index: 6;
+}
+
+.Note_Preview_Label {
+    margin: 0px 0px 10px 0px;
+
+    font-size: 11px;
+    letter-spacing: 1.6px;
+    color: #777;
+    font-weight: 700;
+}
+
+.Note_Preview_Card h3 {
+    margin: 0px 0px 22px 0px;
+
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: #111;
+}
+
+.Note_Preview_Text {
+    margin: 0px 0px 22px 0px;
+
+    font-size: 14px;
+    line-height: 1.5;
+    color: #555;
+}
+
+.Note_Preview_Number {
+    margin: 0px 0px 22px 0px;
+
+    font-size: 18px;
+    color: #111;
+}
+
+.Note_Preview_Button {
+    width: 100%;
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+    background-color: #000;
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+
+    cursor: pointer;
+}
+
+.Note_Preview_Button:hover {
+    background-color: #222;
+}
+
+/**********************************************************************/
+/* Here are the css for the open note pop-up page */
+
+.Note_Modal_Overlay {
+    position: fixed;
+    inset: 0;
+
+    background-color: rgba(255, 255, 255, 0.35);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 999;
+}
+
+.Note_Modal {
+    width: 1000px;
+    height: 900px;
+
+    background-color: #f7f7f7;
+    
+    border-radius: 28px;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+
+    box-shadow: 0px 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.Note_Modal_Header {
+    height: 100px;
+    padding: 24px 32px;
+    box-sizing: border-box;
+
+    border-bottom: 1.5px solid #b7b7b7;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.Note_Modal_Header h2 {
+    margin: 0px 0px 6px 0px;
+
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.Note_Modal_Header p {
+    margin: 0px;
+    font-size: 15px;
+    color: #777;
+}
+
+.Note_Modal_Close_Button {
+    border: none;
+    background: none;
+
+    font-size: 35px;
+    line-height: 1px;
+    cursor: pointer;
+    color: #555;
+}
+
+.Note_Modal_Body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 0;
+}
+
+.Note_Source_Column {
+    padding: 32px;
+    border-right: 1.5px solid #b7b7b7;
+    box-sizing: border-box;
+
+    overflow: auto;
+}
+
+.Note_User_Column {
+    padding: 32px;
+    box-sizing: border-box;
+}
+
+.Note_Modal_Label {
+    margin: 0px 0px 22px 0px;
+
+    font-size: 16px;
+    letter-spacing: 1.4px;
+    color: #7a7a7a;
+    font-weight: 700;
+}
+
+.Note_Source_Text {
+    margin: 0px 0px 22px 0px;
+
+    font-size: 14px;
+    line-height: 1.65;
+    color: #222;
+}
+
+.Note_User_Textarea {
+    width: 100%;
+    height: 620px;
+
+    border: 1px solid #d8d8d8;
+    background-color: white;
+
+    padding: 22px;
+    box-sizing: border-box;
+
+    resize: none;
+    outline: none;
+
+    font-size: 14px;
+    line-height: 1.6;
+    color: #222;
+}
+
+.Note_User_Textarea::placeholder {
+    color: #9a9a9a;
+}
+
+.Note_Modal_Footer {
+    height: 78px;
+
+    background-color: #d3d3d4;
+    border-top: 1px solid #b7b7b7;
+
+    padding: 18px 22px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    font-size: 18px;
+    color: #7a7a7a;
+}
+
+.Note_Modal_Footer_Actions {
+    display: flex;
+    gap: 10px;
+}
+
+.Note_Modal_Cancel_Button, .Note_Modal_Save_Button {
+    height: 38px;
+    padding: 0px 22px;
+
+    border: none;
+    border-radius: 10px;
+    background-color: white;
+
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+}
+
+.Note_Modal_Save_Button {
+    background-color: #000;
+    color: white;
+    margin-left: 10px;
+}
+
+.Note_Modal_Save_Button:hover {
+    background-color: #222;
+}
+
+.Note_Modal_Cancel_Button:hover {
+    background-color: #eeeeee;
+}
