@@ -2,6 +2,7 @@ import "./databaseSearch.css";
 import { FiSearch } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { CiShare1 } from "react-icons/ci";
 
 function DatabaseSearch({ showModal, onClose }) {
 
@@ -398,7 +399,15 @@ function DatabaseSearch({ showModal, onClose }) {
                                     <div className="database-actions">
                                         <button>Add to Archive</button>
                                         <button>Send to Board</button>
-                                        <a href={doc.source_url}>Open source</a>
+                                        <a 
+                                            href={doc.source_url} 
+                                            className="database-open-source"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <CiShare1 />
+                                            Open source
+                                        </a>
                                     </div>
                                 </div>
                             ))}

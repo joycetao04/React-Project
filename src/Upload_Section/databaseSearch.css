@@ -390,3 +390,22 @@
 
     background: white;
 }
+
+.database-open-source{
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+
+    font-size: 11px;
+
+    color: #666;
+
+    text-decoration: none;
+
+    transition: 0.2s;
+}
+
+.database-open-source:hover{
+    color: black;
+}
