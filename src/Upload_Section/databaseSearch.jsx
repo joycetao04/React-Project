@@ -7,30 +7,96 @@ function DatabaseSearch({ showModal, onClose }) {
 
     const [docs, setDocs] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+    const [yearFrom, setYearFrom] = useState("");
+    const [yearTo, setYearTo] = useState("");
+
+    const [selectedSources, setSelectedSources] = useState([
+        "JSTOR",
+        "Local Archive",
+        "Artstor",
+        "Artsy",
+        "Custom"
+    ]);
+    
+    const [selectedContentTypes, setSelectedContentTypes] = useState([
+        "article",
+        "book_catalog",
+        "image_artwork",
+        "thesis_report"
+    ]);
+    
+    const [selectedLanguages, setSelectedLanguages] = useState([
+        "English",
+        "Chinese",
+        "Other"
+    ]);
+    
+    const [selectedAccessTypes, setSelectedAccessTypes] = useState([
+        "full_text",
+        "abstract_only",
+        "open_access"
+    ]);
+
+    const [selectedTags, setSelectedTags] = useState([
+        "photography",
+        "spectral",
+        "archive",
+        "gender",
+        "coloniality"
+    ]);
 
     useEffect(() => {
         fetchDocuments();
-    }, []);
+    }, [
+        searchTerm,
+        selectedSources,
+        selectedContentTypes,
+        selectedLanguages,
+        selectedAccessTypes,
+        selectedTags,
+        yearFrom,
+        yearTo
+    ]);
 
-    async function fetchDocuments(search = "") {
-
+    async function fetchDocuments(search = searchTerm) {
         let query = supabase
             .from("documents")
             .select("*")
             .order("created_at", { ascending: false });
     
         if (search.trim() !== "") {
+            query = query.ilike("title", `%${search}%`);
+        }
     
-            query = query.ilike(
-                "title",
-                `%${search}%`
-            );
+        if (selectedSources.length > 0) {
+            query = query.in("source", selectedSources);
+        }
+    
+        if (selectedContentTypes.length > 0) {
+            query = query.in("content_type", selectedContentTypes);
+        }
+    
+        if (selectedLanguages.length > 0) {
+            query = query.in("language", selectedLanguages);
+        }
+    
+        if (selectedAccessTypes.length > 0) {
+            query = query.in("access_type", selectedAccessTypes);
+        }
+
+        if (selectedTags.length > 0) {
+            query = query.overlaps("tags", selectedTags);
+        }
+
+        if (yearFrom.trim() !== "") {
+            query = query.gte("publication_year", Number(yearFrom));
+        }
+        
+        if (yearTo.trim() !== "") {
+            query = query.lte("publication_year", Number(yearTo));
         }
     
         const { data, error } = await query;
-    
-        console.log(data);
-        console.log(error);
     
         if (error) {
             console.error(error);
@@ -38,6 +104,14 @@ function DatabaseSearch({ showModal, onClose }) {
         }
     
         setDocs(data || []);
+    }
+
+    function toggleFilter(value, selectedList, setSelectedList) {
+        if (selectedList.includes(value)) {
+            setSelectedList(selectedList.filter((item) => item !== value));
+        } else {
+            setSelectedList([...selectedList, value]);
+        }
     }
 
     if (!showModal) {
@@ -72,17 +146,8 @@ function DatabaseSearch({ showModal, onClose }) {
                             <input
                                 type="text"
                                 placeholder="Search articles, books, images..."
-
                                 value={searchTerm}
-
-                                onChange={(e) => {
-
-                                    const value = e.target.value;
-
-                                    setSearchTerm(value);
-
-                                    fetchDocuments(value);
-                                }}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
 
@@ -107,27 +172,38 @@ function DatabaseSearch({ showModal, onClose }) {
                             <p className="filter-title">Source</p>
 
                             <div className="filter-tags">
-                                <button className="filter-tag active">
-                                    All
-                                </button>
-
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedSources.includes("JSTOR") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("JSTOR", selectedSources, setSelectedSources)}
+                                >
                                     JSTOR
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedSources.includes("Local Archive") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Local Archive", selectedSources, setSelectedSources)}
+                                >
                                     Local Archive
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedSources.includes("Artstor") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Artstor", selectedSources, setSelectedSources)}
+                                >
                                     Artstor
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedSources.includes("Artsy") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Artsy", selectedSources, setSelectedSources)}
+                                >
                                     Artsy
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedSources.includes("Custom...") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Custom...", selectedSources, setSelectedSources)}
+                                >
                                     Custom...
                                 </button>
                             </div>
@@ -136,18 +212,52 @@ function DatabaseSearch({ showModal, onClose }) {
                         <div className="database-filter-section">
                             <p className="filter-title">Content type</p>
 
-                            <label><input type="checkbox" /> Article</label>
-                            <label><input type="checkbox" /> Book / Catalog</label>
-                            <label><input type="checkbox" /> Image / Artwork</label>
-                            <label><input type="checkbox" /> Thesis / Report</label>
+                            <div className="filter-tags">
+                                <button
+                                    className={`filter-tag ${selectedContentTypes.includes("article") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("article", selectedContentTypes, setSelectedContentTypes)}
+                                >
+                                    Article
+                                </button>
+
+                                <button
+                                    className={`filter-tag ${selectedContentTypes.includes("book_catalog") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("book_catalog", selectedContentTypes, setSelectedContentTypes)}
+                                >
+                                    Book / Catalog
+                                </button>
+
+                                <button
+                                    className={`filter-tag ${selectedContentTypes.includes("image_artwork") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("image_artwork", selectedContentTypes, setSelectedContentTypes)}
+                                >
+                                    Image / Artwork
+                                </button>
+
+                                <button
+                                    className={`filter-tag ${selectedContentTypes.includes("thesis_report") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("thesis_report", selectedContentTypes, setSelectedContentTypes)}
+                                >
+                                    Thesis / Report
+                                </button>
+                            </div>
                         </div>
 
                         <div className="database-filter-section">
                             <p className="filter-title">Year</p>
 
                             <div className="year-inputs">
-                                <input placeholder="FROM" />
-                                <input placeholder="TO" />
+                                <input
+                                    placeholder="FROM"
+                                    value={yearFrom}
+                                    onChange={(e) => setYearFrom(e.target.value)}
+                                />
+
+                                <input
+                                    placeholder="TO"
+                                    value={yearTo}
+                                    onChange={(e) => setYearTo(e.target.value)}
+                                />
                             </div>
                         </div>
 
@@ -155,61 +265,100 @@ function DatabaseSearch({ showModal, onClose }) {
                             <p className="filter-title">Language</p>
 
                             <div className="filter-tags">
-                                <button className="filter-tag">
+
+                                <button
+                                    className={`filter-tag ${selectedLanguages.includes("English") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("English", selectedLanguages, setSelectedLanguages)}
+                                >
                                     English
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedLanguages.includes("Chinese") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Chinese", selectedLanguages, setSelectedLanguages)}
+                                >
                                     Chinese
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedLanguages.includes("Other") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("Other", selectedLanguages, setSelectedLanguages)}
+                                >
                                     Other
                                 </button>
-                            </div>
+
+                                </div>
                         </div>
 
                         <div className="database-filter-section">
                             <p className="filter-title">Access</p>
 
                             <div className="filter-tags">
-                                <button className="filter-tag">
+
+                                <button
+                                    className={`filter-tag ${selectedAccessTypes.includes("full_text") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("full_text", selectedAccessTypes, setSelectedAccessTypes)}
+                                >
                                     Full text
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedAccessTypes.includes("abstract_only") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("abstract_only", selectedAccessTypes, setSelectedAccessTypes)}
+                                >
                                     Abstract only
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedAccessTypes.includes("open_access") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("open_access", selectedAccessTypes, setSelectedAccessTypes)}
+                                >
                                     Open access
                                 </button>
-                            </div>
+
+                                </div>
                         </div>
 
                         <div className="database-filter-section">
                             <p className="filter-title">Tags</p>
 
                             <div className="filter-tags">
-                                <button className="filter-tag">
+
+                                <button
+                                    className={`filter-tag ${selectedTags.includes("photography") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("photography", selectedTags, setSelectedTags)}
+                                >
                                     photography
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedTags.includes("spectral") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("spectral", selectedTags, setSelectedTags)}
+                                >
                                     spectral
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedTags.includes("archive") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("archive", selectedTags, setSelectedTags)}
+                                >
                                     archive
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedTags.includes("gender") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("gender", selectedTags, setSelectedTags)}
+                                >
                                     gender
                                 </button>
 
-                                <button className="filter-tag">
+                                <button
+                                    className={`filter-tag ${selectedTags.includes("coloniality") ? "active" : ""}`}
+                                    onClick={() => toggleFilter("coloniality", selectedTags, setSelectedTags)}
+                                >
                                     coloniality
                                 </button>
+
                             </div>
                         </div>
 

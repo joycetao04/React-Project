@@ -133,28 +133,35 @@
 }
 
 .filter-tag{
+    height: 28px;
+
     border: 1px solid rgba(0,0,0,0.28);
 
     background: white;
 
-    padding: 5px 10px;
+    padding: 0 12px;
 
     font-size: 11px;
 
     cursor: pointer;
+
+    border-radius: 999px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.15s;
+}
+
+.filter-tag:hover{
+    border-color: black;
 }
 
 .filter-tag.active{
     background: black;
     color: white;
-}
-
-.database-filter-section label{
-    display: block;
-
-    margin-bottom: 10px;
-
-    font-size: 12px;
+    border-color: black;
 }
 
 .year-inputs{
