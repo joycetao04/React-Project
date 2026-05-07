@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
+import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
 
 import { TfiAlignJustify } from "react-icons/tfi";
@@ -91,6 +92,7 @@ function CanvasBoard(){
     const [links, setLinks] = useState([]);
 
     const [showUploadModal, setShowUploadModal] = useState(false);
+    const [showDatabaseSearch, setShowDatabaseSearch] = useState(false);
     const [chatInput, setChatInput] = useState("");
     const [chatMessages, setChatMessages] = useState([]);
     const [isAiThinking, setIsAiThinking] = useState(false);
@@ -426,7 +428,9 @@ function CanvasBoard(){
         <div className="Canvas_Page">
             <Header/>
             <main className="Canvas_Main">
-                <button className="Database_Button">Open Database Search</button>
+                <button className="Database_Button" onClick={() => setShowDatabaseSearch(true)}>
+                    Open Database Search
+                </button>
 
                 <aside className={`Canvas_Left ${isCabinetOpen ? "Canvas_Left_Open" : "Canvas_Left_Closed"}`}>
                     <button className="Cabinet_Toggle_Button" onClick={() => setIsCabinetOpen((prev) => !prev)}>{isCabinetOpen ? <AiOutlineDoubleLeft className="DoubleLeft" /> : <AiOutlineDoubleRight className="DoubleRight"/>}</button>
@@ -632,6 +636,7 @@ function CanvasBoard(){
                 </aside>
             </main>
             <UploadFile showModal={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={handleUploadSuccess}/>
+            <DatabaseSearch showModal={showDatabaseSearch} onClose={() => setShowDatabaseSearch(false)}/>
             {openedNote && (
                 <div className="Note_Modal_Overlay">
                     <div className="Note_Modal">

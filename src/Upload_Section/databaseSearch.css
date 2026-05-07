@@ -1,0 +1,332 @@
+.database-overlay{
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,0.28);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+.database-modal{
+    width: 1150px;
+    height: 760px;
+
+    background: white;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(0,0,0,0.18);
+
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.database-topbar{
+    height: 92px;
+
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 34px;
+}
+
+.database-tabs{
+    display: flex;
+    gap: 26px;
+}
+
+.database-tab{
+    border: none;
+    background: transparent;
+
+    font-size: 11px;
+    letter-spacing: 0.08em;
+
+    cursor: pointer;
+
+    color: #8b8b8b;
+}
+
+.database-tab.active{
+    color: black;
+    border-bottom: 1px solid black;
+    padding-bottom: 5px;
+}
+
+.database-searchbar{
+    width: 290px;
+    height: 42px;
+
+    border: 1px solid rgba(0,0,0,0.25);
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 14px;
+
+    gap: 10px;
+}
+
+.database-searchbar input{
+    border: none;
+    outline: none;
+
+    width: 100%;
+
+    font-size: 13px;
+}
+
+.database-search-icon{
+    font-size: 16px;
+    color: #777;
+}
+
+.database-content{
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.database-filter-panel{
+    width: 260px;
+
+    border-right: 1px solid rgba(0,0,0,0.12);
+
+    padding: 28px 18px;
+
+    overflow-y: auto;
+}
+
+.database-filter-panel h3{
+    font-size: 12px;
+    letter-spacing: 0.12em;
+
+    margin-bottom: 28px;
+
+    font-weight: 600;
+}
+
+.database-filter-section{
+    margin-bottom: 30px;
+}
+
+.filter-title{
+    font-size: 11px;
+    color: #777;
+
+    margin-bottom: 12px;
+}
+
+.filter-tags{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-tag{
+    border: 1px solid rgba(0,0,0,0.28);
+
+    background: white;
+
+    padding: 5px 10px;
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+.filter-tag.active{
+    background: black;
+    color: white;
+}
+
+.database-filter-section label{
+    display: block;
+
+    margin-bottom: 10px;
+
+    font-size: 12px;
+}
+
+.year-inputs{
+    display: flex;
+    gap: 10px;
+}
+
+.year-inputs input{
+    width: 90px;
+    height: 30px;
+
+    border: 1px solid rgba(0,0,0,0.18);
+
+    padding-left: 10px;
+
+    font-size: 11px;
+}
+
+.database-results-panel{
+    width: 430px;
+    border-right: 1px solid rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.database-results-scroll{
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.database-results-header{
+    height: 58px;
+
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    font-size: 12px;
+    color: #777;
+}
+
+.database-result-card{
+    padding: 30px 40px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.database-result-card:last-child{
+    border-bottom: none;
+}
+
+.database-result-card h2{
+    font-size: 24px;
+
+    line-height: 1.4;
+
+    margin-bottom: 10px;
+
+    font-weight: 500;
+}
+
+.database-meta{
+    font-size: 12px;
+    color: #888;
+
+    margin-bottom: 14px;
+}
+
+.database-description{
+    font-size: 13px;
+    line-height: 1.7;
+
+    color: #555;
+
+    margin-bottom: 16px;
+}
+
+.database-keywords{
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 16px;
+}
+
+.database-keywords span{
+    border: 1px solid rgba(0,0,0,0.15);
+
+    padding: 4px 8px;
+
+    font-size: 11px;
+
+    color: #666;
+}
+
+.database-actions{
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.database-actions button{
+    height: 24px;
+
+    border: 1px solid rgb(0, 0, 0);
+
+    background: #999999;
+
+    padding: 0 14px;
+
+    font-size: 11px;
+
+    cursor: pointer;
+
+    border-radius: 50px;
+
+    
+}
+
+.database-actions a{
+    font-size: 11px;
+
+    color: #666;
+
+    text-decoration: none;
+}
+
+.database-preview-panel{
+    flex: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #FAFAFA;
+}
+
+.preview-placeholder{
+    font-size: 14px;
+    color: #999999;
+}
+
+.database-topbar-right{
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.database-close-btn{
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    background: transparent;
+
+    font-size: 34px;
+    font-weight: 300;
+
+    cursor: pointer;
+
+    color: #555;
+
+    transition: 0.2s;
+}
+
+.database-close-btn:hover{
+    color: black;
+    transform: scale(1.08);
+}
