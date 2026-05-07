@@ -1,40 +1,33 @@
 import "./databaseSearch.css";
 import { FiSearch } from "react-icons/fi";
-
-const sampleDocs = [
-    {
-        title: "When Patriarchy Is a Ghost: Spectral Images in Contemporary Photography",
-        meta: "Joyce Li • Journal of Visual Culture • 2023 • JSTOR",
-        description: "This article examines how contemporary photographers utilize spectral imagery to interrogate patriarchal structures...",
-        tags: ["photography", "spectral", "gender", "article"],
-    },
-    {
-        title: "The Archive as Haunted Space: Memory, Photography, and Colonial Violence",
-        meta: "Maria Santos • Photography & Culture • 2022 • JSTOR",
-        description: "Exploring the relationship between photographic archives and colonial histories...",
-        tags: ["archive", "photography", "coloniality", "article"],
-    },
-    {
-        title: "Spectral Aesthetics: Photography and the Question of Presence",
-        meta: "David Chen • October • 2021 • JSTOR",
-        description: "An investigation into the ontology of the photographic image through the lens of spectrality...",
-        tags: ["photography", "spectral", "article"],
-    },
-    {
-        title: "Museums, Memory, and the Politics of Visual Evidence",
-        meta: "Amina Rahman • Museum Studies Review • 2020 • Local Archive",
-        description: "This paper considers how museum collections shape public memory through visual documentation...",
-        tags: ["museum", "memory", "archive"],
-    },
-    {
-        title: "Colonial Archives and Contemporary Image Practices",
-        meta: "Leo Martin • Art History Quarterly • 2019 • Artstor",
-        description: "A study of how contemporary artists reuse colonial photographic archives in critical visual practice...",
-        tags: ["coloniality", "image", "archive"],
-    },
-];
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 function DatabaseSearch({ showModal, onClose }) {
+
+    const [docs, setDocs] = useState([]);
+
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
+
+    async function fetchDocuments() {
+        const { data, error } = await supabase
+            .from("documents")
+            .select("*")
+            .order("created_at", { ascending: false });
+    
+        console.log("Supabase data:", data);
+        console.log("Supabase error:", error);
+    
+        if (error) {
+            console.error(error.message);
+            return;
+        }
+    
+        setDocs(data || []);
+    }
+
     if (!showModal) {
         return null;
     }
@@ -201,32 +194,32 @@ function DatabaseSearch({ showModal, onClose }) {
 
                     <section className="database-results-panel">
                         <div className="database-results-header">
-                            8 results • Sorted by relevance
+                            {docs.length} results • Sorted by relevance
                         </div>
 
                         <div className="database-results-scroll">
-                            {sampleDocs.map((doc, index) => (
+                            {docs.map((doc, index) => (
                                 <div className="database-result-card" key={index}>
                                     <h2>{doc.title}</h2>
 
                                     <p className="database-meta">
-                                        {doc.meta}
+                                        {doc.authors} •
+                                        {" "}
+                                        {doc.journal_or_platform} •
+                                        {" "}
+                                        {doc.publication_year} •
+                                        {" "}
+                                        {doc.source}
                                     </p>
 
                                     <p className="database-description">
                                         {doc.description}
                                     </p>
 
-                                    <div className="database-keywords">
-                                        {doc.tags.map((tag) => (
-                                            <span key={tag}>{tag}</span>
-                                        ))}
-                                    </div>
-
                                     <div className="database-actions">
                                         <button>Add to Archive</button>
                                         <button>Send to Board</button>
-                                        <a href="/">Open source</a>
+                                        <a href={doc.source_url}>Open source</a>
                                     </div>
                                 </div>
                             ))}
