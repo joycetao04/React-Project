@@ -38,6 +38,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
+    z-index: 100;
   }
   
   .upload-modal {
@@ -204,6 +205,14 @@
     padding: 10px 16px;
     cursor: pointer;
     box-shadow: inset 0 0 0 1px #ececec;
+  }
+  
+  .upload-done-btn:hover {
+    border: none;
+    background: #acacac;
+    color: #f7f7f7;
+    border-radius: 11px;
+    box-shadow: inset 0 0 0 1px #acacac;
   }
 
   .drag-active {
