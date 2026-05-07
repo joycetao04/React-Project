@@ -6,22 +6,34 @@ import { supabase } from "../lib/supabase";
 function DatabaseSearch({ showModal, onClose }) {
 
     const [docs, setDocs] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         fetchDocuments();
     }, []);
 
-    async function fetchDocuments() {
-        const { data, error } = await supabase
+    async function fetchDocuments(search = "") {
+
+        let query = supabase
             .from("documents")
             .select("*")
             .order("created_at", { ascending: false });
     
-        console.log("Supabase data:", data);
-        console.log("Supabase error:", error);
+        if (search.trim() !== "") {
+    
+            query = query.ilike(
+                "title",
+                `%${search}%`
+            );
+        }
+    
+        const { data, error } = await query;
+    
+        console.log(data);
+        console.log(error);
     
         if (error) {
-            console.error(error.message);
+            console.error(error);
             return;
         }
     
@@ -60,6 +72,17 @@ function DatabaseSearch({ showModal, onClose }) {
                             <input
                                 type="text"
                                 placeholder="Search articles, books, images..."
+
+                                value={searchTerm}
+
+                                onChange={(e) => {
+
+                                    const value = e.target.value;
+
+                                    setSearchTerm(value);
+
+                                    fetchDocuments(value);
+                                }}
                             />
                         </div>
 
