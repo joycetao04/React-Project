@@ -9,6 +9,7 @@ function DatabaseSearch({ showModal, onClose }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [yearFrom, setYearFrom] = useState("");
     const [yearTo, setYearTo] = useState("");
+    const [selectedDoc, setSelectedDoc] = useState(null);
 
     const [selectedSources, setSelectedSources] = useState([
         "JSTOR",
@@ -371,7 +372,13 @@ function DatabaseSearch({ showModal, onClose }) {
 
                         <div className="database-results-scroll">
                             {docs.map((doc, index) => (
-                                <div className="database-result-card" key={index}>
+                                <div
+                                className={`database-result-card ${
+                                    selectedDoc?.id === doc.id ? "selected-card" : ""
+                                }`}
+                                key={index}
+                                onClick={() => setSelectedDoc(doc)}
+                                >
                                     <h2>{doc.title}</h2>
 
                                     <p className="database-meta">
@@ -400,9 +407,37 @@ function DatabaseSearch({ showModal, onClose }) {
 
                     <section className="database-preview-panel">
 
-                        <div className="preview-placeholder">
-                            Select a result to preview
-                        </div>
+                        {selectedDoc ? (
+
+                            <div className="preview-content">
+
+                                <div className="preview-header">
+                                    <h2>{selectedDoc.title}</h2>
+
+                                    <p>
+                                        {selectedDoc.authors} •
+                                        {" "}
+                                        {selectedDoc.journal_or_platform} •
+                                        {" "}
+                                        {selectedDoc.publication_year}
+                                    </p>
+                                </div>
+
+                                <iframe
+                                    src={selectedDoc.file_url || selectedDoc.source_url}
+                                    title={selectedDoc.title}
+                                    className="document-preview"
+                                />
+
+                            </div>
+
+                        ) : (
+
+                            <div className="preview-placeholder">
+                                Select a result to preview
+                            </div>
+
+                        )}
 
                     </section>
 
