@@ -3,6 +3,7 @@ import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
 import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
+import { supabase } from "../lib/supabase";
 
 import { TfiAlignJustify } from "react-icons/tfi";
 import { VscArrowUp } from "react-icons/vsc";
@@ -68,26 +69,7 @@ function CanvasBoard(){
         }
     ]);
 
-    const [notes, setNotes] = useState([
-        /** x and y are the position of the note on the canvas */
-        /** selected we will know if the note get selected or not if did change color to darker color */
-        {
-            id: 1,
-            title: "Document1",
-            body: "Some text here that will talk about the document.",
-            x: 260,
-            y: 120,
-            selected: true,
-        },
-        {
-            id: 2,
-            title: "Document2",
-            body: "Some text here that will talk about the document.",
-            x: 520,
-            y: 260,
-            selected: false,
-        },
-    ]);
+    const [notes, setNotes] = useState([]);
 
     const [links, setLinks] = useState([]);
 
@@ -111,6 +93,31 @@ function CanvasBoard(){
 
     const NOTE_WIDTH = 185; /** Currently I set the width of the note to be 185px */
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
+    /***************************************************************************/
+    /** This function loads all saved canvas notes from Supabase when the board opens */
+    const fetchCanvasNotes = async () => {
+        const { data, error } = await supabase
+            .from("canvas_notes")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Failed to fetch canvas notes:", error);
+            return;
+        }
+
+        const formattedNotes = data.map((note) => ({
+            id: note.id,
+            documentId: note.document_id,
+            title: note.title,
+            body: note.body,
+            x: note.x_position,
+            y: note.y_position,
+            selected: note.selected,
+        }));
+
+        setNotes(formattedNotes);
+    };
     /** When file upload success it will be package in the way we want so later can put into the PGSQL*/
     const handleUploadSuccess = (uploadedFile) => {
         const newFile = {
@@ -146,23 +153,41 @@ function CanvasBoard(){
         setNotes((prevNotes) => [...prevNotes, newNote]);
     };
     /***************************************************************************/
-    /** This function will send a selected database document to the main board */
-    const handleSendDocToBoard = (doc) => {
+    /** This function will send a selected database document to the main board and save it to Supabase */
+    const handleSendDocToBoard = async (doc) => {
+        const x = 300 + notes.length * 30;
+        const y = 120 + notes.length * 30;
+
+        const { data, error } = await supabase
+            .from("canvas_notes")
+            .insert([
+                {
+                    document_id: doc.id,
+                    title: doc.title,
+                    body: doc.description || "Note from database source.",
+                    x_position: x,
+                    y_position: y,
+                    selected: false,
+                },
+            ])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Failed to save note:", error);
+            return;
+        }
+
         const newNote = {
-            id: Date.now(),
-            title: doc.title,
-            body: doc.description || "Note from database source.",
-            x: 300 + notes.length * 30,
-            y: 120 + notes.length * 30,
-            selected: false,
-    
-            sourceUrl: doc.source_url,
-            fileUrl: doc.file_url,
-            authors: doc.authors,
-            publicationYear: doc.publication_year,
-            journal: doc.journal_or_platform,
+            id: data.id,
+            documentId: data.document_id,
+            title: data.title,
+            body: data.body,
+            x: data.x_position,
+            y: data.y_position,
+            selected: data.selected,
         };
-    
+
         setNotes((prevNotes) => [...prevNotes, newNote]);
     };
     /***************************************************************************/
@@ -286,7 +311,27 @@ function CanvasBoard(){
         }
     };
     /***************************************************************************/
-    const handleCanvasMouseUp = () => {
+    /** This function stops note dragging or board panning and saves note position to Supabase */
+    const handleCanvasMouseUp = async () => {
+        if (draggingNoteId !== null) {
+            const draggedNote = notes.find((note) => note.id === draggingNoteId);
+
+            if (draggedNote) {
+                const { error } = await supabase
+                    .from("canvas_notes")
+                    .update({
+                        x_position: Math.round(draggedNote.x),
+                        y_position: Math.round(draggedNote.y),
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", draggingNoteId);
+
+                if (error) {
+                    console.error("Failed to update note position:", error);
+                }
+            }
+        }
+
         setDraggingNoteId(null);
         setIsPanningBoard(false);
     };
@@ -369,20 +414,35 @@ function CanvasBoard(){
         return notes.find((note) => note.id === noteId);
     };
     /***************************************************************************/
-    const handleDeleteSelectedNote = () => {
-        const selectedNoteId = notes.filter((note) => note.selected).map((note) => note.id);
+    /** This function deletes selected notes from both the board and Supabase */
+    const handleDeleteSelectedNote = async () => {
+        const selectedNoteId = notes
+            .filter((note) => note.selected)
+            .map((note) => note.id);
 
         if (selectedNoteId.length === 0) {
             return;
         }
 
-        setNotes((prevNotes) => 
+        const { error } = await supabase
+            .from("canvas_notes")
+            .delete()
+            .in("id", selectedNoteId);
+
+        if (error) {
+            console.error("Failed to delete notes:", error);
+            return;
+        }
+
+        setNotes((prevNotes) =>
             prevNotes.filter((note) => !selectedNoteId.includes(note.id))
         );
 
-        setLinks((prevLinks) => 
+        setLinks((prevLinks) =>
             prevLinks.filter(
-                (link) => !selectedNoteId.includes(link.fromNoteId) && !selectedNoteId.includes(link.toNoteId)
+                (link) =>
+                    !selectedNoteId.includes(link.fromNoteId) &&
+                    !selectedNoteId.includes(link.toNoteId)
             )
         );
     };
@@ -414,6 +474,11 @@ function CanvasBoard(){
 
         handleCloseNote();
     }
+    /***************************************************************************/
+    /** This effect loads saved notes from database when CanvasBoard first renders */
+    useEffect(() => {
+        fetchCanvasNotes();
+    }, []);
     /** When click "Delete" or "Backspace" it will delete the selected note */
     useEffect(() => {
         const handleKeyDown = (event) => {
