@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
 import "./Canvas_Board.css"
@@ -13,6 +13,8 @@ import { TiArrowBack } from "react-icons/ti";
 import { TiArrowForward } from "react-icons/ti";
 import { IoLinkSharp } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
+import { FaListUl } from "react-icons/fa";
+import { FaListOl } from "react-icons/fa";
 
 
 function CanvasBoard(){
@@ -106,6 +108,7 @@ function CanvasBoard(){
     const [hoveredNoteId, setHoveredNoteId] = useState(null);
     const [openedNoteId, setOpenedNoteId] = useState(null);
     const [noteDraft, setNoteDraft] = useState("");
+    const editorRef = useRef(null);
 
     const NOTE_WIDTH = 185; /** Currently I set the width of the note to be 185px */
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
@@ -384,14 +387,37 @@ function CanvasBoard(){
     };
     /***************************************************************************/
     const handleSaveNote = () => {
+        const editorHtml = editorRef.current ? editorRef.current.innerHTML : "";
+
         setNotes((prevNotes) => 
             prevNotes.map((note) =>
-                note.id === openedNoteId ? {...note, userNote: noteDraft} : note
+                note.id === openedNoteId ? {...note, userNote: editorHtml} : note
             )
         );
 
+        setNoteDraft(editorHtml);
         handleCloseNote();
     }
+    /***************************************************************************/
+    const handleEditorCommand = (command, value = null) => {
+        if (editorRef.current) {
+            editorRef.current.focus();
+        }
+
+        document.execCommand(command, false, value);
+
+        if (editorRef.current) {
+            setNoteDraft(editorRef.current.innerHTML);
+        }
+    };
+    /***************************************************************************/
+    useEffect(() => {
+        if (openedNote && editorRef.current) {
+            editorRef.current.innerHTML = openedNote.userNote || "";
+            setNoteDraft(openedNote.userNote || "");
+        }
+    }, [openedNoteId]);
+    /***************************************************************************/
     /** When click "Delete" or "Backspace" it will delete the selected note */
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -659,36 +685,32 @@ function CanvasBoard(){
                             <div className="Note_User_Column">
                                 <div className="Note_Editor">
                                     <div className="Note_Editor_Header">
-                                        <input />
+                                        <input className="Note_Editor_Title_Input" value={openedNote.title} readOnly/>
 
-                                        <button><MdDelete /></button>
+                                        <button className="Note_Editor_Delete_Button"><MdDelete /></button>
                                     </div>
 
-                                    <div>
-                                        <button><TiArrowBack /></button>
-                                        <button><TiArrowForward /></button>
+                                    <div className="Note_Editor_Toolbar">
+                                        <button type="button"><TiArrowBack /></button>
+                                        <button type="button"><TiArrowForward /></button>
 
-                                        <select>
-                                            <option>Normal</option>
-                                            <option>Heading 1</option>
-                                            <option>Heading 2</option>
-                                            <option>Quote</option>
+                                        <select onChange={(event) => handleEditorCommand("formatBlock", event.target.value)} defaultValue="p">
+                                            <option value="p">Normal</option>
+                                            <option value="h1">Heading 1</option>
+                                            <option value="h2">Heading 2</option>
+                                            <option value="blockquote">Quote</option>
                                         </select>
 
-                                        <button><b>B</b></button>
-                                        <button><i>I</i></button>
-                                        <button><IoLinkSharp /></button>
-                                        <button>&lt;&gt;</button>
-                                        <button>▣</button>
-                                        <button>• list</button>
-                                        <button>1. list</button>
-                                        <button>❝</button>
-                                        <button>—</button>
+                                        <button type="button" onClick={() => handleEditorCommand("bold")}><b>B</b></button>
+                                        <button type="button" onClick={() => handleEditorCommand("italic")}><i>I</i></button>
+                                        <button type="button" onClick={() => {const url = prompt("Enter link URL:"); if (url) {handleEditorCommand("createLink", url)}}}><IoLinkSharp /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("formatBlock", "pre")}>&lt;&gt;</button>
+                                        <button type="button" onClick={() => handleEditorCommand("insertUnorderedList")}><FaListUl /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("insertOrderedList")}><FaListOl /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("formatBlock", "blockquote")}>❝</button>
+                                        <button type="button">—</button>
                                     </div>
-
-                                    <p className="Note_Modal_Label">YOUR NOTES</p>
-
-                                    <textarea className="Note_User_Textarea" placeholder="Write your observations, connections, and insights..." value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)}/>
+                                    <div ref={editorRef} className="Note_Editor_Content" contentEditable suppressContentEditableWarning suppressHydrationWarning onInput={(event) => setNoteDraft(event.currentTarget.innerHTML)}/>
                                 </div>
                             </div>
 
