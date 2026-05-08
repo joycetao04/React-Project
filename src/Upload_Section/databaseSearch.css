@@ -409,3 +409,13 @@
 .database-open-source:hover{
     color: black;
 }
+
+.send-board-btn{
+    transition: 0.2s ease;
+}
+
+.send-board-btn.sent{
+    background: black;
+    color: white;
+    transform: scale(1.04);
+}

@@ -146,6 +146,26 @@ function CanvasBoard(){
         setNotes((prevNotes) => [...prevNotes, newNote]);
     };
     /***************************************************************************/
+    /** This function will send a selected database document to the main board */
+    const handleSendDocToBoard = (doc) => {
+        const newNote = {
+            id: Date.now(),
+            title: doc.title,
+            body: doc.description || "Note from database source.",
+            x: 300 + notes.length * 30,
+            y: 120 + notes.length * 30,
+            selected: false,
+    
+            sourceUrl: doc.source_url,
+            fileUrl: doc.file_url,
+            authors: doc.authors,
+            publicationYear: doc.publication_year,
+            journal: doc.journal_or_platform,
+        };
+    
+        setNotes((prevNotes) => [...prevNotes, newNote]);
+    };
+    /***************************************************************************/
     /** This function will count the number of note been selected */
     const selectedNotesCount = notes.filter((note) => note.selected).length;
     /***************************************************************************/
@@ -636,7 +656,7 @@ function CanvasBoard(){
                 </aside>
             </main>
             <UploadFile showModal={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={handleUploadSuccess}/>
-            <DatabaseSearch showModal={showDatabaseSearch} onClose={() => setShowDatabaseSearch(false)}/>
+            <DatabaseSearch showModal={showDatabaseSearch} onClose={() => setShowDatabaseSearch(false)} onSendToBoard={handleSendDocToBoard}/>
             {openedNote && (
                 <div className="Note_Modal_Overlay">
                     <div className="Note_Modal">

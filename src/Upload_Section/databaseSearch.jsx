@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { CiShare1 } from "react-icons/ci";
 
-function DatabaseSearch({ showModal, onClose }) {
+function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
 
     const [docs, setDocs] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [yearFrom, setYearFrom] = useState("");
     const [yearTo, setYearTo] = useState("");
     const [selectedDoc, setSelectedDoc] = useState(null);
+    const [sentDocId, setSentDocId] = useState(null);
 
     const [selectedSources, setSelectedSources] = useState([
         "JSTOR",
@@ -398,7 +399,24 @@ function DatabaseSearch({ showModal, onClose }) {
 
                                     <div className="database-actions">
                                         <button>Add to Archive</button>
-                                        <button>Send to Board</button>
+                                        <button
+                                            className={sentDocId === doc.id ? "send-board-btn sent" : "send-board-btn"}
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+
+                                                if (onSendToBoard) {
+                                                    onSendToBoard(doc);
+                                                }
+
+                                                setSentDocId(doc.id);
+
+                                                setTimeout(() => {
+                                                    setSentDocId(null);
+                                                }, 1200);
+                                            }}
+                                        >
+                                            {sentDocId === doc.id ? "Added ✓" : "Send to Board"}
+                                        </button>
                                         <a 
                                             href={doc.source_url} 
                                             className="database-open-source"
