@@ -13,53 +13,99 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
     const [selectedDoc, setSelectedDoc] = useState(null);
     const [sentDocId, setSentDocId] = useState(null);
 
+    const [sourceOptions, setSourceOptions] = useState([]);
+    const [contentTypeOptions, setContentTypeOptions] = useState([]);
+    const [languageOptions, setLanguageOptions] = useState([]);
+    const [accessTypeOptions, setAccessTypeOptions] = useState([]);
+    const [tagOptions, setTagOptions] = useState([]);
+
     const [selectedSources, setSelectedSources] = useState([
+    /*    
         "JSTOR",
         "Local Archive",
         "Artstor",
         "Artsy",
         "Custom"
+    */
     ]);
     
     const [selectedContentTypes, setSelectedContentTypes] = useState([
+    /*
         "article",
         "book_catalog",
         "image_artwork",
         "thesis_report"
+    */
     ]);
     
     const [selectedLanguages, setSelectedLanguages] = useState([
+    /*
         "English",
         "Chinese",
         "Other"
+    */
     ]);
     
     const [selectedAccessTypes, setSelectedAccessTypes] = useState([
+    /*
         "full_text",
         "abstract_only",
         "open_access"
+    */
     ]);
 
     const [selectedTags, setSelectedTags] = useState([
+    /*
         "photography",
         "spectral",
         "archive",
         "gender",
         "coloniality"
+    */
     ]);
 
+    /***************************************************************************/
+    /** This function loads all available filter options from the documents table */
+    async function fetchFilterOptions() {
+        const { data, error } = await supabase
+            .from("documents")
+            .select("source, content_type, language, access_type, tags");
+
+        if (error) {
+            console.error("Failed to fetch filter options:", error);
+            return;
+        }
+
+        setSourceOptions([
+            ...new Set(data.map((doc) => doc.source).filter(Boolean)),
+        ]);
+
+        setContentTypeOptions([
+            ...new Set(data.map((doc) => doc.content_type).filter(Boolean)),
+        ]);
+
+        setLanguageOptions([
+            ...new Set(data.map((doc) => doc.language).filter(Boolean)),
+        ]);
+
+        setAccessTypeOptions([
+            ...new Set(data.map((doc) => doc.access_type).filter(Boolean)),
+        ]);
+
+        const allTags = data.flatMap((doc) => doc.tags || []);
+
+        setTagOptions([
+            ...new Set(allTags.filter(Boolean)),
+        ]);
+    }
+
+    /***************************************************************************/
+    /** This effect loads filter options from database when the popup opens */
     useEffect(() => {
-        fetchDocuments();
-    }, [
-        searchTerm,
-        selectedSources,
-        selectedContentTypes,
-        selectedLanguages,
-        selectedAccessTypes,
-        selectedTags,
-        yearFrom,
-        yearTo
-    ]);
+        if (showModal) {
+            fetchFilterOptions();
+        }
+    }, [showModal]);
 
     async function fetchDocuments(search = searchTerm) {
         let query = supabase
@@ -109,12 +155,33 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
         setDocs(data || []);
     }
 
+    useEffect(() => {
+        fetchDocuments();
+    }, [
+        searchTerm,
+        selectedSources,
+        selectedContentTypes,
+        selectedLanguages,
+        selectedAccessTypes,
+        selectedTags,
+        yearFrom,
+        yearTo
+    ]);
+
     function toggleFilter(value, selectedList, setSelectedList) {
         if (selectedList.includes(value)) {
             setSelectedList(selectedList.filter((item) => item !== value));
         } else {
             setSelectedList([...selectedList, value]);
         }
+    }
+
+    /***************************************************************************/
+    /** This function converts database-style labels into readable UI text */
+    function formatLabel(text) {
+        return text
+            .replaceAll("_", " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
     if (!showModal) {
@@ -175,40 +242,15 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
                             <p className="filter-title">Source</p>
 
                             <div className="filter-tags">
-                                <button
-                                    className={`filter-tag ${selectedSources.includes("JSTOR") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("JSTOR", selectedSources, setSelectedSources)}
-                                >
-                                    JSTOR
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedSources.includes("Local Archive") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Local Archive", selectedSources, setSelectedSources)}
-                                >
-                                    Local Archive
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedSources.includes("Artstor") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Artstor", selectedSources, setSelectedSources)}
-                                >
-                                    Artstor
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedSources.includes("Artsy") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Artsy", selectedSources, setSelectedSources)}
-                                >
-                                    Artsy
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedSources.includes("Custom...") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Custom...", selectedSources, setSelectedSources)}
-                                >
-                                    Custom...
-                                </button>
+                                {sourceOptions.map((source) => (
+                                    <button
+                                        key={source}
+                                        className={`filter-tag ${selectedSources.includes(source) ? "active" : ""}`}
+                                        onClick={() => toggleFilter(source, selectedSources, setSelectedSources)}
+                                    >
+                                        {formatLabel(source)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -216,33 +258,15 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
                             <p className="filter-title">Content type</p>
 
                             <div className="filter-tags">
-                                <button
-                                    className={`filter-tag ${selectedContentTypes.includes("article") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("article", selectedContentTypes, setSelectedContentTypes)}
-                                >
-                                    Article
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedContentTypes.includes("book_catalog") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("book_catalog", selectedContentTypes, setSelectedContentTypes)}
-                                >
-                                    Book / Catalog
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedContentTypes.includes("image_artwork") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("image_artwork", selectedContentTypes, setSelectedContentTypes)}
-                                >
-                                    Image / Artwork
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedContentTypes.includes("thesis_report") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("thesis_report", selectedContentTypes, setSelectedContentTypes)}
-                                >
-                                    Thesis / Report
-                                </button>
+                                {contentTypeOptions.map((type) => (
+                                    <button
+                                        key={type}
+                                        className={`filter-tag ${selectedContentTypes.includes(type) ? "active" : ""}`}
+                                        onClick={() => toggleFilter(type, selectedContentTypes, setSelectedContentTypes)}
+                                    >
+                                        {formatLabel(type)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -268,100 +292,47 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
                             <p className="filter-title">Language</p>
 
                             <div className="filter-tags">
-
-                                <button
-                                    className={`filter-tag ${selectedLanguages.includes("English") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("English", selectedLanguages, setSelectedLanguages)}
-                                >
-                                    English
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedLanguages.includes("Chinese") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Chinese", selectedLanguages, setSelectedLanguages)}
-                                >
-                                    Chinese
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedLanguages.includes("Other") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("Other", selectedLanguages, setSelectedLanguages)}
-                                >
-                                    Other
-                                </button>
-
-                                </div>
+                                {languageOptions.map((language) => (
+                                    <button
+                                        key={language}
+                                        className={`filter-tag ${selectedLanguages.includes(language) ? "active" : ""}`}
+                                        onClick={() => toggleFilter(language, selectedLanguages, setSelectedLanguages)}
+                                    >
+                                        {formatLabel(language)}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="database-filter-section">
                             <p className="filter-title">Access</p>
 
                             <div className="filter-tags">
-
-                                <button
-                                    className={`filter-tag ${selectedAccessTypes.includes("full_text") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("full_text", selectedAccessTypes, setSelectedAccessTypes)}
-                                >
-                                    Full text
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedAccessTypes.includes("abstract_only") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("abstract_only", selectedAccessTypes, setSelectedAccessTypes)}
-                                >
-                                    Abstract only
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedAccessTypes.includes("open_access") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("open_access", selectedAccessTypes, setSelectedAccessTypes)}
-                                >
-                                    Open access
-                                </button>
-
-                                </div>
+                                {accessTypeOptions.map((access) => (
+                                    <button
+                                        key={access}
+                                        className={`filter-tag ${selectedAccessTypes.includes(access) ? "active" : ""}`}
+                                        onClick={() => toggleFilter(access, selectedAccessTypes, setSelectedAccessTypes)}
+                                    >
+                                        {formatLabel(access)}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="database-filter-section">
                             <p className="filter-title">Tags</p>
 
                             <div className="filter-tags">
-
-                                <button
-                                    className={`filter-tag ${selectedTags.includes("photography") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("photography", selectedTags, setSelectedTags)}
-                                >
-                                    photography
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedTags.includes("spectral") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("spectral", selectedTags, setSelectedTags)}
-                                >
-                                    spectral
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedTags.includes("archive") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("archive", selectedTags, setSelectedTags)}
-                                >
-                                    archive
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedTags.includes("gender") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("gender", selectedTags, setSelectedTags)}
-                                >
-                                    gender
-                                </button>
-
-                                <button
-                                    className={`filter-tag ${selectedTags.includes("coloniality") ? "active" : ""}`}
-                                    onClick={() => toggleFilter("coloniality", selectedTags, setSelectedTags)}
-                                >
-                                    coloniality
-                                </button>
-
+                                {tagOptions.map((tag) => (
+                                    <button
+                                        key={tag}
+                                        className={`filter-tag ${selectedTags.includes(tag) ? "active" : ""}`}
+                                        onClick={() => toggleFilter(tag, selectedTags, setSelectedTags)}
+                                    >
+                                        {formatLabel(tag)}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
@@ -396,6 +367,16 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
                                     <p className="database-description">
                                         {doc.description}
                                     </p>
+
+                                    <div className="database-keywords">
+                                        {doc.tags && doc.tags.length > 0 ? (
+                                            doc.tags.map((tag) => (
+                                                <span key={tag}>{formatLabel(tag)}</span>
+                                            ))
+                                        ) : (
+                                            <span>Other</span>
+                                        )}
+                                    </div>
 
                                     <div className="database-actions">
                                         <button>Add to Archive</button>
