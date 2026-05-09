@@ -13,6 +13,7 @@ import ArtThreadsPage from './pages/artthreadspage/ArtThreadsPage.jsx';
 ////////////////// New
 import CanvasPage from "./Canvas_Workspace/Canvas_Board.jsx";
 import LoginPage from "./Auth/LoginPage.jsx";
+import ProtectedRoute from './Auth/ProtectedRoute.jsx';
 ///////images
 import DailyArtwork from './assets/DailyArtwork.png'
 import ArtMap from './assets/ArtMap.png'
@@ -32,9 +33,9 @@ function App() {
           
           <Routes>
             <Route path="/" element={
-              <>
+              <ProtectedRoute>
                 <CanvasPage/>
-              </>
+              </ProtectedRoute>
             } />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<HomePage />} />
