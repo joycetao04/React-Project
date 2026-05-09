@@ -8,14 +8,44 @@ function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLoginSubmit = (event) => {
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLoginSubmit = async(event) => {
         event.preventDefault();
 
-        console.log("Login data:", {
-            email,
-            password,
-        });
-        //Later: POST http://localhost:5000/api/auth/login
+        setErrorMessage("");
+        setIsLoading(true);
+
+        try {
+            const response = await fetch("http://localhost:5000/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setErrorMessage(data.error || "Login failed.");
+                return;
+            }
+
+            localStorage.setItem("nexo_token", data.token);
+            localStorage.setItem("nexo_user", JSON.stringify(data.user));
+
+            window.location.href = "/";
+        } catch (error) {
+            console.error("Login request error:", error);
+            setErrorMessage("Cannot connect to server/ Please try again.")
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -36,7 +66,11 @@ function LoginPage() {
 
                 <input className="Login_Input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
 
-                <button className="Login_Continue_Button" type="submit">CONTINUE</button>
+                {errorMessage && (
+                    <p className="Login_Error_Message">{errorMessage}</p>
+                )}
+
+                <button className="Login_Continue_Button" type="submit" disabled={isLoading}>{isLoading ? "SIGNING IN..." : "CONTINUE"}</button>
 
                 <div className="Login_Divider">
                     <span></span>

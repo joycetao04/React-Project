@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
 import "./Canvas_Board.css"
+import { apiRequest } from "../api.js";
 
 import { TfiAlignJustify } from "react-icons/tfi";
 import { VscArrowUp } from "react-icons/vsc";
@@ -18,77 +19,70 @@ import { FaListOl } from "react-icons/fa";
 
 
 function CanvasBoard(){
+
+    const currentUser = JSON.parse(localStorage.getItem("nexo_user") || "null");
+
+    const handleLogout = () => {
+        localStorage.removeItem("nexo_token");
+        localStorage.removeItem("nexo_user");
+        window.location.href = "/login";
+    };
+
     const [files, setFiles] = useState([
-        {
-            id: 1,
-            title: "The Document Name",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 2,
-            title: "The Document Name2",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 3,
-            title: "The Document Name3",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 4,
-            title: "The Document Name4",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 5,
-            title: "The Document Name5",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 6,
-            title: "The Document Name6",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 7,
-            title: "The Document Name7",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 8,
-            title: "The Document Name8",
-            date: "2026.05.04",
-            size: "1KTB",
-        }
+        // {
+        //     id: 1,
+        //     title: "The Document Name",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 2,
+        //     title: "The Document Name2",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 3,
+        //     title: "The Document Name3",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 4,
+        //     title: "The Document Name4",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 5,
+        //     title: "The Document Name5",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 6,
+        //     title: "The Document Name6",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 7,
+        //     title: "The Document Name7",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 8,
+        //     title: "The Document Name8",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // }
     ]);
 
     const [notes, setNotes] = useState([
         /** x and y are the position of the note on the canvas */
         /** selected we will know if the note get selected or not if did change color to darker color */
-        {
-            id: 1,
-            title: "Document1",
-            body: "Some text here that will talk about the document.",
-            x: 260,
-            y: 120,
-            selected: true,
-        },
-        {
-            id: 2,
-            title: "Document2",
-            body: "Some text here that will talk about the document.",
-            x: 520,
-            y: 260,
-            selected: false,
-        },
-    ]);
+        ]);
 
     const [links, setLinks] = useState([]);
 
@@ -134,17 +128,28 @@ function CanvasBoard(){
     };
     /***************************************************************************/
     /** When click the File on the left it will show up on the Canvas (x and y in the function I set it this way so it will keep shift buttom right a bit so it wont overlap) */
-    const handleFileClick = (file) => {
-        const newNote = {
-            id: Date.now(),
+    const handleFileClick = async (file) => {
+        const newNoteData = {
             title: file.title,
             body: "Note from the source.",
+            user_note: "",
             x: 300 + notes.length * 30,
             y: 120 + notes.length * 30,
-            selected: false,
         };
 
-        setNotes((prevNotes) => [...prevNotes, newNote]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+        } catch (error) {
+            console.error("Create note error:", error);
+            alert("Failed to create note.");
+        }
     };
     /***************************************************************************/
     /** This function will count the number of note been selected */
@@ -182,6 +187,7 @@ function CanvasBoard(){
         }, 900);
 
     };
+    /***************************************************************************/
     const handleChatKeyDown = (event) => {
         if (event.key == "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -198,12 +204,12 @@ function CanvasBoard(){
         event.preventDefault();
     };
     /***************************************************************************/
-    const handleCanvasDrop = (event) => {
+    const handleCanvasDrop = async (event) => {
         event.preventDefault();
 
         const fileData = event.dataTransfer.getData("application/json");
 
-        if(!fileData){
+        if (!fileData) {
             return;
         }
 
@@ -214,16 +220,27 @@ function CanvasBoard(){
         const x = (event.clientX - canvasRect.left - boardOffset.x) / boardScale;
         const y = (event.clientY - canvasRect.top - boardOffset.y) / boardScale;
 
-        const newNote = {
-            id: Date.now(),
+        const newNoteData = {
             title: file.title,
             body: "Note or AI summary from the source",
+            user_note: "",
             x,
             y,
-            selected: false,
         };
 
-        setNotes((prevNotes) => [...prevNotes, newNote]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+        } catch (error) {
+            console.error("Create dropped note error:", error);
+            alert("Failed to create note.");
+        }
     };
     /***************************************************************************/
     const handleNoteMouseDown = (event, note) => {
@@ -267,7 +284,19 @@ function CanvasBoard(){
         }
     };
     /***************************************************************************/
-    const handleCanvasMouseUp = () => {
+    const handleCanvasMouseUp = async () => {
+        if (draggingNoteId !== null && hasDraggedNote) {
+            const draggedNote = notes.find((note) => note.id === draggingNoteId);
+
+            if (draggedNote) {
+                await updateNoteInDatabase(draggedNote.id, {
+                    x: draggedNote.x,
+                    y: draggedNote.y,
+                });
+            }
+        }
+
+
         setDraggingNoteId(null);
         setIsPanningBoard(false);
     };
@@ -301,6 +330,7 @@ function CanvasBoard(){
             y: nextOffsetY,
         });
     };
+    /***************************************************************************/
     const handleBoardMouseDown = (event) => {
         const isCanvasBackground = event.target.classList.contains("Canvas_Center") || event.target.classList.contains("Canvas_World");
 
@@ -350,20 +380,32 @@ function CanvasBoard(){
         return notes.find((note) => note.id === noteId);
     };
     /***************************************************************************/
-    const handleDeleteSelectedNote = () => {
-        const selectedNoteId = notes.filter((note) => note.selected).map((note) => note.id);
+    const handleDeleteSelectedNote = async () => {
+        const selectedNoteIds = notes
+            .filter((note) => note.selected)
+            .map((note) => note.id);
 
-        if (selectedNoteId.length === 0) {
+        if (selectedNoteIds.length === 0) {
             return;
         }
 
-        setNotes((prevNotes) => 
-            prevNotes.filter((note) => !selectedNoteId.includes(note.id))
+        const deleteResults = await Promise.all(
+            selectedNoteIds.map((noteId) => deleteNoteFromDatabase(noteId))
         );
 
-        setLinks((prevLinks) => 
+        const successfullyDeletedIds = selectedNoteIds.filter(
+            (noteId, index) => deleteResults[index]
+        );
+
+        setNotes((prevNotes) =>
+            prevNotes.filter((note) => !successfullyDeletedIds.includes(note.id))
+        );
+
+        setLinks((prevLinks) =>
             prevLinks.filter(
-                (link) => !selectedNoteId.includes(link.fromNoteId) && !selectedNoteId.includes(link.toNoteId)
+                (link) =>
+                    !successfullyDeletedIds.includes(link.fromNoteId) &&
+                    !successfullyDeletedIds.includes(link.toNoteId)
             )
         );
     };
@@ -386,8 +428,16 @@ function CanvasBoard(){
         setNoteDraft("");
     };
     /***************************************************************************/
-    const handleSaveNote = () => {
+    const handleSaveNote = async () => {
         const editorHtml = editorRef.current ? editorRef.current.innerHTML : "";
+
+        const updatedNote = await updateNoteInDatabase(openedNoteId, {
+            user_note: editorHtml,
+        });
+
+        if (!updatedNote) {
+            return;
+        }
 
         setNotes((prevNotes) => 
             prevNotes.map((note) =>
@@ -410,6 +460,62 @@ function CanvasBoard(){
             setNoteDraft(editorRef.current.innerHTML);
         }
     };
+    /***************************************************************************/
+    const convertDatabaseNoteToCanvasNote = (note) => {
+        return {
+            id: note.id,
+            title: note.title,
+            body: note.body || "",
+            userNote: note.user_note || "",
+            x: Number(note.x),
+            y: Number(note.y),
+            selected: false,
+        };
+    };
+    /***************************************************************************/
+    const updateNoteInDatabase = async (noteId, updates) => {
+        try {
+            const data = await apiRequest(`/notes/${noteId}`, {
+                method: "PATCH",
+                body: JSON.stringify(updates),
+            });
+
+            return convertDatabaseNoteToCanvasNote(data.note);
+        } catch (error) {
+            console.error("Update note error:", error);
+            console.log("Failed to update note.");
+            return null;
+        }
+    };
+    /***************************************************************************/
+    const deleteNoteFromDatabase = async (noteId) => {
+        try {
+            await apiRequest(`/notes/${noteId}`, {
+                method: "DELETE",
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Delete note error:", error);
+            return false;
+        }
+    };
+    /***************************************************************************/
+    const loadNotesFromDatabase = async () => {
+        try {
+            const data = await apiRequest("/notes");
+
+            const databaseNotes = data.notes.map(convertDatabaseNoteToCanvasNote);
+
+            setNotes(databaseNotes);
+        } catch (error) {
+            console.error("Load notes error:", error);
+        }
+    };
+    /***************************************************************************/
+    useEffect(() => {
+        loadNotesFromDatabase();
+    }, []);
     /***************************************************************************/
     useEffect(() => {
         if (openedNote && editorRef.current) {
@@ -452,6 +558,7 @@ function CanvasBoard(){
         <div className="Canvas_Page">
             <Header/>
             <main className="Canvas_Main">
+                <button className="Logout_Button" onClick={handleLogout}>Logout {currentUser?.email ? `(${currentUser.email})` : ""}</button>
                 <button className="Database_Button">Open Database Search</button>
 
                 <aside className={`Canvas_Left ${isCabinetOpen ? "Canvas_Left_Open" : "Canvas_Left_Closed"}`}>

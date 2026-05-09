@@ -16,6 +16,27 @@
     overflow: hidden;
 }
 
+.Logout_Button {
+    position: absolute;
+    top: 30px;
+    right: 64px;
+    z-index: 30;
+
+    height: 38px;
+    padding: 0px 18px;
+
+    border: none;
+    border-radius: 6px;
+    background-color: #eeeeee;
+
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.Logout_Button:hover {
+    background-color: #dddddd;
+}
+
 .Database_Button {
     position: absolute;
     top: 30px;
