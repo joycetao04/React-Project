@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
+import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
+import { supabase } from "../lib/supabase";
 import { apiRequest } from "../api.js";
 
 import { TfiAlignJustify } from "react-icons/tfi";
@@ -79,14 +81,11 @@ function CanvasBoard(){
         // }
     ]);
 
-    const [notes, setNotes] = useState([
-        /** x and y are the position of the note on the canvas */
-        /** selected we will know if the note get selected or not if did change color to darker color */
-        ]);
-
+    const [notes, setNotes] = useState([]);
     const [links, setLinks] = useState([]);
 
     const [showUploadModal, setShowUploadModal] = useState(false);
+    const [showDatabaseSearch, setShowDatabaseSearch] = useState(false);
     const [chatInput, setChatInput] = useState("");
     const [chatMessages, setChatMessages] = useState([]);
     const [isAiThinking, setIsAiThinking] = useState(false);
@@ -106,6 +105,31 @@ function CanvasBoard(){
 
     const NOTE_WIDTH = 185; /** Currently I set the width of the note to be 185px */
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
+    /***************************************************************************/
+    /** This function loads all saved canvas notes from Supabase when the board opens */
+    const fetchCanvasNotes = async () => {
+        const { data, error } = await supabase
+            .from("canvas_notes")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Failed to fetch canvas notes:", error);
+            return;
+        }
+
+        const formattedNotes = data.map((note) => ({
+            id: note.id,
+            documentId: note.document_id,
+            title: note.title,
+            body: note.body,
+            x: note.x_position,
+            y: note.y_position,
+            selected: note.selected,
+        }));
+
+        setNotes(formattedNotes);
+    };
     /** When file upload success it will be package in the way we want so later can put into the PGSQL*/
     const handleUploadSuccess = (uploadedFile) => {
         const newFile = {
@@ -150,6 +174,44 @@ function CanvasBoard(){
             console.error("Create note error:", error);
             alert("Failed to create note.");
         }
+    };
+    /***************************************************************************/
+    /** This function will send a selected database document to the main board and save it to Supabase */
+    const handleSendDocToBoard = async (doc) => {
+        const x = 300 + notes.length * 30;
+        const y = 120 + notes.length * 30;
+
+        const { data, error } = await supabase
+            .from("canvas_notes")
+            .insert([
+                {
+                    document_id: doc.id,
+                    title: doc.title,
+                    body: doc.description || "Note from database source.",
+                    x_position: x,
+                    y_position: y,
+                    selected: false,
+                },
+            ])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Failed to save note:", error);
+            return;
+        }
+
+        const newNote = {
+            id: data.id,
+            documentId: data.document_id,
+            title: data.title,
+            body: data.body,
+            x: data.x_position,
+            y: data.y_position,
+            selected: data.selected,
+        };
+
+        setNotes((prevNotes) => [...prevNotes, newNote]);
     };
     /***************************************************************************/
     /** This function will count the number of note been selected */
@@ -380,8 +442,9 @@ function CanvasBoard(){
         return notes.find((note) => note.id === noteId);
     };
     /***************************************************************************/
+    /** This function deletes selected notes from both the board and Supabase */
     const handleDeleteSelectedNote = async () => {
-        const selectedNoteIds = notes
+        const selectedNoteId = notes
             .filter((note) => note.selected)
             .map((note) => note.id);
 
@@ -559,7 +622,9 @@ function CanvasBoard(){
             <Header/>
             <main className="Canvas_Main">
                 <button className="Logout_Button" onClick={handleLogout}>Logout {currentUser?.email ? `(${currentUser.email})` : ""}</button>
-                <button className="Database_Button">Open Database Search</button>
+                <button className="Database_Button" onClick={() => setShowDatabaseSearch(true)}>
+                    Open Database Search
+                </button>
 
                 <aside className={`Canvas_Left ${isCabinetOpen ? "Canvas_Left_Open" : "Canvas_Left_Closed"}`}>
                     <button className="Cabinet_Toggle_Button" onClick={() => setIsCabinetOpen((prev) => !prev)}>{isCabinetOpen ? <AiOutlineDoubleLeft className="DoubleLeft" /> : <AiOutlineDoubleRight className="DoubleRight"/>}</button>
@@ -765,6 +830,7 @@ function CanvasBoard(){
                 </aside>
             </main>
             <UploadFile showModal={showUploadModal} onClose={() => setShowUploadModal(false)} onUploadSuccess={handleUploadSuccess}/>
+            <DatabaseSearch showModal={showDatabaseSearch} onClose={() => setShowDatabaseSearch(false)} onSendToBoard={handleSendDocToBoard}/>
             {openedNote && (
                 <div className="Note_Modal_Overlay">
                     <div className="Note_Modal">
