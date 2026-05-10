@@ -12,8 +12,8 @@
 }
 
 .database-modal{
-    width: 1150px;
-    height: 760px;
+    width: 1200px;
+    height: 900px;
 
     background: white;
 
@@ -56,6 +56,10 @@
     color: #8b8b8b;
 }
 
+.database-tab:hover{
+    text-decoration: underline;
+}
+
 .database-tab.active{
     color: black;
     border-bottom: 1px solid black;
@@ -67,6 +71,7 @@
     height: 42px;
 
     border: 1px solid rgba(0,0,0,0.25);
+    border-radius: 6px;
 
     display: flex;
     align-items: center;
@@ -155,7 +160,7 @@
 }
 
 .filter-tag:hover{
-    border-color: black;
+    background-color: #7e7e7e;
 }
 
 .filter-tag.active{
@@ -174,7 +179,7 @@
     height: 30px;
 
     border: 1px solid rgba(0,0,0,0.18);
-
+    border-radius: 6px;
     padding-left: 10px;
 
     font-size: 11px;
@@ -284,7 +289,13 @@
 
     border-radius: 50px;
 
+    border: none;
+
     
+}
+
+.database-actions button:hover{
+    background-color: #555;
 }
 
 .database-actions a{

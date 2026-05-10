@@ -1,8 +1,9 @@
 import "./databaseSearch.css";
 import { FiSearch } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+//import { supabase } from "../lib/supabase";
 import { CiShare1 } from "react-icons/ci";
+import { apiRequest } from "../api";
 
 function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
 
@@ -67,36 +68,17 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
     /***************************************************************************/
     /** This function loads all available filter options from the documents table */
     async function fetchFilterOptions() {
-        const { data, error } = await supabase
-            .from("documents")
-            .select("source, content_type, language, access_type, tags");
+        try {
+            const data = await apiRequest("/documents/filters");
 
-        if (error) {
+            setSourceOptions(data.sources || []);
+            setContentTypeOptions(data.contentTypes || []);
+            setLanguageOptions(data.languages || []);
+            setAccessTypeOptions(data.accessTypes || []);
+            setTagOptions(data.tags || []);
+        } catch (error) {
             console.error("Failed to fetch filter options:", error);
-            return;
         }
-
-        setSourceOptions([
-            ...new Set(data.map((doc) => doc.source).filter(Boolean)),
-        ]);
-
-        setContentTypeOptions([
-            ...new Set(data.map((doc) => doc.content_type).filter(Boolean)),
-        ]);
-
-        setLanguageOptions([
-            ...new Set(data.map((doc) => doc.language).filter(Boolean)),
-        ]);
-
-        setAccessTypeOptions([
-            ...new Set(data.map((doc) => doc.access_type).filter(Boolean)),
-        ]);
-
-        const allTags = data.flatMap((doc) => doc.tags || []);
-
-        setTagOptions([
-            ...new Set(allTags.filter(Boolean)),
-        ]);
     }
 
     /***************************************************************************/
@@ -108,51 +90,51 @@ function DatabaseSearch({ showModal, onClose, onSendToBoard }) {
     }, [showModal]);
 
     async function fetchDocuments(search = searchTerm) {
-        let query = supabase
-            .from("documents")
-            .select("*")
-            .order("created_at", { ascending: false });
-    
-        if (search.trim() !== "") {
-            query = query.ilike("title", `%${search}%`);
-        }
-    
-        if (selectedSources.length > 0) {
-            query = query.in("source", selectedSources);
-        }
-    
-        if (selectedContentTypes.length > 0) {
-            query = query.in("content_type", selectedContentTypes);
-        }
-    
-        if (selectedLanguages.length > 0) {
-            query = query.in("language", selectedLanguages);
-        }
-    
-        if (selectedAccessTypes.length > 0) {
-            query = query.in("access_type", selectedAccessTypes);
-        }
+        try {
+            const params = new URLSearchParams();
 
-        if (selectedTags.length > 0) {
-            query = query.overlaps("tags", selectedTags);
-        }
+            if (search.trim() !== "") {
+                params.append("search", search);
+            }
 
-        if (yearFrom.trim() !== "") {
-            query = query.gte("publication_year", Number(yearFrom));
+            if (selectedSources.length > 0) {
+                params.append("sources", selectedSources.join(","));
+            }
+
+            if (selectedContentTypes.length > 0) {
+                params.append("contentTypes", selectedContentTypes.join(","));
+            }
+
+            if (selectedLanguages.length > 0) {
+                params.append("languages", selectedLanguages.join(","));
+            }
+
+            if (selectedAccessTypes.length > 0) {
+                params.append("accessTypes", selectedAccessTypes.join(","));
+            }
+
+            if (selectedTags.length > 0) {
+                params.append("tags", selectedTags.join(","));
+            }
+
+            if (yearFrom.trim() !== "") {
+                params.append("yearFrom", yearFrom);
+            }
+
+            if (yearTo.trim() !== "") {
+                params.append("yearTo", yearTo);
+            }
+
+            const queryString = params.toString();
+
+            const data = await apiRequest(
+                queryString ? `/documents?${queryString}` : "/documents"
+            );
+
+            setDocs(data.documents || []);
+        } catch (error) {
+            console.error("Failed to fetch documents:", error);
         }
-        
-        if (yearTo.trim() !== "") {
-            query = query.lte("publication_year", Number(yearTo));
-        }
-    
-        const { data, error } = await query;
-    
-        if (error) {
-            console.error(error);
-            return;
-        }
-    
-        setDocs(data || []);
     }
 
     useEffect(() => {
