@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
 import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
 import { supabase } from "../lib/supabase";
+import { apiRequest } from "../api.js";
 
 import { TfiAlignJustify } from "react-icons/tfi";
 import { VscArrowUp } from "react-icons/vsc";
@@ -15,62 +16,72 @@ import { TiArrowBack } from "react-icons/ti";
 import { TiArrowForward } from "react-icons/ti";
 import { IoLinkSharp } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
+import { FaListUl } from "react-icons/fa";
+import { FaListOl } from "react-icons/fa";
 
 
 function CanvasBoard(){
+
+    const currentUser = JSON.parse(localStorage.getItem("nexo_user") || "null");
+
+    const handleLogout = () => {
+        localStorage.removeItem("nexo_token");
+        localStorage.removeItem("nexo_user");
+        window.location.href = "/login";
+    };
+
     const [files, setFiles] = useState([
-        {
-            id: 1,
-            title: "The Document Name",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 2,
-            title: "The Document Name2",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 3,
-            title: "The Document Name3",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 4,
-            title: "The Document Name4",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 5,
-            title: "The Document Name5",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 6,
-            title: "The Document Name6",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 7,
-            title: "The Document Name7",
-            date: "2026.05.04",
-            size: "1KTB",
-        },
-        {
-            id: 8,
-            title: "The Document Name8",
-            date: "2026.05.04",
-            size: "1KTB",
-        }
+        // {
+        //     id: 1,
+        //     title: "The Document Name",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 2,
+        //     title: "The Document Name2",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 3,
+        //     title: "The Document Name3",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 4,
+        //     title: "The Document Name4",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 5,
+        //     title: "The Document Name5",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 6,
+        //     title: "The Document Name6",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 7,
+        //     title: "The Document Name7",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // },
+        // {
+        //     id: 8,
+        //     title: "The Document Name8",
+        //     date: "2026.05.04",
+        //     size: "1KTB",
+        // }
     ]);
 
     const [notes, setNotes] = useState([]);
-
     const [links, setLinks] = useState([]);
 
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -90,6 +101,7 @@ function CanvasBoard(){
     const [hoveredNoteId, setHoveredNoteId] = useState(null);
     const [openedNoteId, setOpenedNoteId] = useState(null);
     const [noteDraft, setNoteDraft] = useState("");
+    const editorRef = useRef(null);
 
     const NOTE_WIDTH = 185; /** Currently I set the width of the note to be 185px */
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
@@ -140,17 +152,28 @@ function CanvasBoard(){
     };
     /***************************************************************************/
     /** When click the File on the left it will show up on the Canvas (x and y in the function I set it this way so it will keep shift buttom right a bit so it wont overlap) */
-    const handleFileClick = (file) => {
-        const newNote = {
-            id: Date.now(),
+    const handleFileClick = async (file) => {
+        const newNoteData = {
             title: file.title,
             body: "Note from the source.",
+            user_note: "",
             x: 300 + notes.length * 30,
             y: 120 + notes.length * 30,
-            selected: false,
         };
 
-        setNotes((prevNotes) => [...prevNotes, newNote]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+        } catch (error) {
+            console.error("Create note error:", error);
+            alert("Failed to create note.");
+        }
     };
     /***************************************************************************/
     /** This function will send a selected database document to the main board and save it to Supabase */
@@ -226,6 +249,7 @@ function CanvasBoard(){
         }, 900);
 
     };
+    /***************************************************************************/
     const handleChatKeyDown = (event) => {
         if (event.key == "Enter" && !event.shiftKey) {
             event.preventDefault();
@@ -242,12 +266,12 @@ function CanvasBoard(){
         event.preventDefault();
     };
     /***************************************************************************/
-    const handleCanvasDrop = (event) => {
+    const handleCanvasDrop = async (event) => {
         event.preventDefault();
 
         const fileData = event.dataTransfer.getData("application/json");
 
-        if(!fileData){
+        if (!fileData) {
             return;
         }
 
@@ -258,16 +282,27 @@ function CanvasBoard(){
         const x = (event.clientX - canvasRect.left - boardOffset.x) / boardScale;
         const y = (event.clientY - canvasRect.top - boardOffset.y) / boardScale;
 
-        const newNote = {
-            id: Date.now(),
+        const newNoteData = {
             title: file.title,
             body: "Note or AI summary from the source",
+            user_note: "",
             x,
             y,
-            selected: false,
         };
 
-        setNotes((prevNotes) => [...prevNotes, newNote]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+        } catch (error) {
+            console.error("Create dropped note error:", error);
+            alert("Failed to create note.");
+        }
     };
     /***************************************************************************/
     const handleNoteMouseDown = (event, note) => {
@@ -311,26 +346,18 @@ function CanvasBoard(){
         }
     };
     /***************************************************************************/
-    /** This function stops note dragging or board panning and saves note position to Supabase */
     const handleCanvasMouseUp = async () => {
-        if (draggingNoteId !== null) {
+        if (draggingNoteId !== null && hasDraggedNote) {
             const draggedNote = notes.find((note) => note.id === draggingNoteId);
 
             if (draggedNote) {
-                const { error } = await supabase
-                    .from("canvas_notes")
-                    .update({
-                        x_position: Math.round(draggedNote.x),
-                        y_position: Math.round(draggedNote.y),
-                        updated_at: new Date().toISOString(),
-                    })
-                    .eq("id", draggingNoteId);
-
-                if (error) {
-                    console.error("Failed to update note position:", error);
-                }
+                await updateNoteInDatabase(draggedNote.id, {
+                    x: draggedNote.x,
+                    y: draggedNote.y,
+                });
             }
         }
+
 
         setDraggingNoteId(null);
         setIsPanningBoard(false);
@@ -365,6 +392,7 @@ function CanvasBoard(){
             y: nextOffsetY,
         });
     };
+    /***************************************************************************/
     const handleBoardMouseDown = (event) => {
         const isCanvasBackground = event.target.classList.contains("Canvas_Center") || event.target.classList.contains("Canvas_World");
 
@@ -420,29 +448,27 @@ function CanvasBoard(){
             .filter((note) => note.selected)
             .map((note) => note.id);
 
-        if (selectedNoteId.length === 0) {
+        if (selectedNoteIds.length === 0) {
             return;
         }
 
-        const { error } = await supabase
-            .from("canvas_notes")
-            .delete()
-            .in("id", selectedNoteId);
+        const deleteResults = await Promise.all(
+            selectedNoteIds.map((noteId) => deleteNoteFromDatabase(noteId))
+        );
 
-        if (error) {
-            console.error("Failed to delete notes:", error);
-            return;
-        }
+        const successfullyDeletedIds = selectedNoteIds.filter(
+            (noteId, index) => deleteResults[index]
+        );
 
         setNotes((prevNotes) =>
-            prevNotes.filter((note) => !selectedNoteId.includes(note.id))
+            prevNotes.filter((note) => !successfullyDeletedIds.includes(note.id))
         );
 
         setLinks((prevLinks) =>
             prevLinks.filter(
                 (link) =>
-                    !selectedNoteId.includes(link.fromNoteId) &&
-                    !selectedNoteId.includes(link.toNoteId)
+                    !successfullyDeletedIds.includes(link.fromNoteId) &&
+                    !successfullyDeletedIds.includes(link.toNoteId)
             )
         );
     };
@@ -465,20 +491,102 @@ function CanvasBoard(){
         setNoteDraft("");
     };
     /***************************************************************************/
-    const handleSaveNote = () => {
+    const handleSaveNote = async () => {
+        const editorHtml = editorRef.current ? editorRef.current.innerHTML : "";
+
+        const updatedNote = await updateNoteInDatabase(openedNoteId, {
+            user_note: editorHtml,
+        });
+
+        if (!updatedNote) {
+            return;
+        }
+
         setNotes((prevNotes) => 
             prevNotes.map((note) =>
-                note.id === openedNoteId ? {...note, userNote: noteDraft} : note
+                note.id === openedNoteId ? {...note, userNote: editorHtml} : note
             )
         );
 
+        setNoteDraft(editorHtml);
         handleCloseNote();
     }
     /***************************************************************************/
-    /** This effect loads saved notes from database when CanvasBoard first renders */
+    const handleEditorCommand = (command, value = null) => {
+        if (editorRef.current) {
+            editorRef.current.focus();
+        }
+
+        document.execCommand(command, false, value);
+
+        if (editorRef.current) {
+            setNoteDraft(editorRef.current.innerHTML);
+        }
+    };
+    /***************************************************************************/
+    const convertDatabaseNoteToCanvasNote = (note) => {
+        return {
+            id: note.id,
+            title: note.title,
+            body: note.body || "",
+            userNote: note.user_note || "",
+            x: Number(note.x),
+            y: Number(note.y),
+            selected: false,
+        };
+    };
+    /***************************************************************************/
+    const updateNoteInDatabase = async (noteId, updates) => {
+        try {
+            const data = await apiRequest(`/notes/${noteId}`, {
+                method: "PATCH",
+                body: JSON.stringify(updates),
+            });
+
+            return convertDatabaseNoteToCanvasNote(data.note);
+        } catch (error) {
+            console.error("Update note error:", error);
+            console.log("Failed to update note.");
+            return null;
+        }
+    };
+    /***************************************************************************/
+    const deleteNoteFromDatabase = async (noteId) => {
+        try {
+            await apiRequest(`/notes/${noteId}`, {
+                method: "DELETE",
+            });
+
+            return true;
+        } catch (error) {
+            console.error("Delete note error:", error);
+            return false;
+        }
+    };
+    /***************************************************************************/
+    const loadNotesFromDatabase = async () => {
+        try {
+            const data = await apiRequest("/notes");
+
+            const databaseNotes = data.notes.map(convertDatabaseNoteToCanvasNote);
+
+            setNotes(databaseNotes);
+        } catch (error) {
+            console.error("Load notes error:", error);
+        }
+    };
+    /***************************************************************************/
     useEffect(() => {
-        fetchCanvasNotes();
+        loadNotesFromDatabase();
     }, []);
+    /***************************************************************************/
+    useEffect(() => {
+        if (openedNote && editorRef.current) {
+            editorRef.current.innerHTML = openedNote.userNote || "";
+            setNoteDraft(openedNote.userNote || "");
+        }
+    }, [openedNoteId]);
+    /***************************************************************************/
     /** When click "Delete" or "Backspace" it will delete the selected note */
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -513,6 +621,7 @@ function CanvasBoard(){
         <div className="Canvas_Page">
             <Header/>
             <main className="Canvas_Main">
+                <button className="Logout_Button" onClick={handleLogout}>Logout {currentUser?.email ? `(${currentUser.email})` : ""}</button>
                 <button className="Database_Button" onClick={() => setShowDatabaseSearch(true)}>
                     Open Database Search
                 </button>
@@ -749,36 +858,32 @@ function CanvasBoard(){
                             <div className="Note_User_Column">
                                 <div className="Note_Editor">
                                     <div className="Note_Editor_Header">
-                                        <input />
+                                        <input className="Note_Editor_Title_Input" value={openedNote.title} readOnly/>
 
-                                        <button><MdDelete /></button>
+                                        <button className="Note_Editor_Delete_Button"><MdDelete /></button>
                                     </div>
 
-                                    <div>
-                                        <button><TiArrowBack /></button>
-                                        <button><TiArrowForward /></button>
+                                    <div className="Note_Editor_Toolbar">
+                                        <button type="button"><TiArrowBack /></button>
+                                        <button type="button"><TiArrowForward /></button>
 
-                                        <select>
-                                            <option>Normal</option>
-                                            <option>Heading 1</option>
-                                            <option>Heading 2</option>
-                                            <option>Quote</option>
+                                        <select onChange={(event) => handleEditorCommand("formatBlock", event.target.value)} defaultValue="p">
+                                            <option value="p">Normal</option>
+                                            <option value="h1">Heading 1</option>
+                                            <option value="h2">Heading 2</option>
+                                            <option value="blockquote">Quote</option>
                                         </select>
 
-                                        <button><b>B</b></button>
-                                        <button><i>I</i></button>
-                                        <button><IoLinkSharp /></button>
-                                        <button>&lt;&gt;</button>
-                                        <button>▣</button>
-                                        <button>• list</button>
-                                        <button>1. list</button>
-                                        <button>❝</button>
-                                        <button>—</button>
+                                        <button type="button" onClick={() => handleEditorCommand("bold")}><b>B</b></button>
+                                        <button type="button" onClick={() => handleEditorCommand("italic")}><i>I</i></button>
+                                        <button type="button" onClick={() => {const url = prompt("Enter link URL:"); if (url) {handleEditorCommand("createLink", url)}}}><IoLinkSharp /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("formatBlock", "pre")}>&lt;&gt;</button>
+                                        <button type="button" onClick={() => handleEditorCommand("insertUnorderedList")}><FaListUl /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("insertOrderedList")}><FaListOl /></button>
+                                        <button type="button" onClick={() => handleEditorCommand("formatBlock", "blockquote")}>❝</button>
+                                        <button type="button">—</button>
                                     </div>
-
-                                    <p className="Note_Modal_Label">YOUR NOTES</p>
-
-                                    <textarea className="Note_User_Textarea" placeholder="Write your observations, connections, and insights..." value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)}/>
+                                    <div ref={editorRef} className="Note_Editor_Content" contentEditable suppressContentEditableWarning suppressHydrationWarning onInput={(event) => setNoteDraft(event.currentTarget.innerHTML)}/>
                                 </div>
                             </div>
 

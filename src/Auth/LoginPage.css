@@ -1,0 +1,199 @@
+.Login_Page {
+    min-height: 100vh;
+    background-color: #ffffff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+.Login_Brand {
+    margin: 0px 0px 44px 0px;
+
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #000;
+}
+
+.Login_Card {
+    width: 480px;
+    min-height: 720px;
+
+    border: 1px solid #d8d8d8;
+    border-radius: 20px;
+
+    padding: 64px 54px;
+    box-sizing: border-box;
+
+    background-color: white;
+}
+
+.Login_Card h1 {
+    margin: 0px 0px 12px 0px;
+
+    font-size: 32px;
+    font-weight: 400;
+    color: #000;
+}
+
+.Login_Subtitle {
+    margin: 0px 0px 40px 0px;
+
+    font-size: 16px;
+    color: #555;
+}
+
+.Login_Label {
+    display: block;
+    margin-bottom: 12px;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #000;
+}
+
+.Login_Input {
+    width: 100%;
+    height: 58px;
+
+    border: 1px solid #bdbdbd;
+    border-radius: 12px;
+
+    padding: 0px 16px;
+    box-sizing: border-box;
+
+    font-size: 16px;
+    outline: none;
+
+    margin-bottom: 26px;
+}
+
+.Login_Input:focus {
+    border-color: #000;
+}
+
+.Login_Row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.Login_Forgot_Button {
+    border: none;
+    background: none;
+    padding: 0px;
+
+    color: #444;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.Login_Continue_Button {
+    width: 100%;
+    height: 56px;
+
+    margin-top: 6px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: #000;
+    color: white;
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+}
+
+.Login_Continue_Button:hover {
+    background-color: #222;
+}
+
+.Login_Divider {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+
+    margin: 40px 0px;
+}
+
+.Login_Divider span {
+    flex: 1;
+    height: 1px;
+    background-color: #e0e0e0;
+}
+
+.Login_Divider p {
+    margin: 0;
+    color: #888;
+    font-size: 14px;
+}
+
+.Login_Google_Button {
+    width: 100%;
+    height: 50px;
+
+    border: 1px solid #c9c9c9;
+    border-radius: 10px;
+
+    background-color: white;
+
+    font-size: 18px;
+    font-weight: 540;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+
+    cursor: pointer;
+}
+
+.Login_Google_Button:hover {
+    background-color: #f7f7f7;
+}
+
+.Login_Google_Icon {
+    font-size: 25px;
+    font-weight: 700;
+
+    padding-top: 3px;
+    padding-left: 3px;
+}
+
+.Login_Signup_Text {
+    margin: 44px 0px 0px 0px;
+
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+}
+
+.Login_Signup_Text button {
+    border: none;
+    background: none;
+    padding: 0px;
+
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+    cursor: pointer;
+}
+
+.Login_Error_Message {
+    margin: -12px 0px 18px 0px;
+    color: #c62828;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.Login_Continue_Button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

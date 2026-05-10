@@ -1,26 +1,41 @@
-const express = require("express");
-const path = require("path");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRoutes from "./routes/authRoutes.js";
+import pool from "./db.js";
+import noteRoute from "./routes/noteRoutes.js";
+
+dotenv.config();
 
 const app = express();
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));
+
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.render("index", { title: "Hello EJS" });
+app.get("/api/test", async (req, res) => {
+    try {
+        const result = await pool.query("select now() as current_time");
+        res.json({
+            message: "Backend is working and Supabase is connected.",
+            databaseTime: result.rows[0].current_time,
+        });
+    } catch (error) {
+        console.error("Database test error:", error);
+        res.status(500).json({
+            error: "Backend is running, but database connection failed.",
+        });
+    }
 });
 
-app.listen(3000, () => console.log("http://localhost:3000"));
+app.use("/api/auth", authRoutes);
+app.use("/api/notes", noteRoute);
 
-//
-app.get("/api/health", (req, res) => {
-    res.json({ ok: true, time: Date.now() });
-  });
-  
-  app.post("/api/echo", (req, res) => {
-    res.json({ youSent: req.body });
-  });
-  
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
