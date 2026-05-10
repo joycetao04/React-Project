@@ -3,7 +3,7 @@ import Header from "./Header.jsx";
 import UploadFile from "../Upload_Section/uploadFile.jsx";
 import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
-import { supabase } from "../lib/supabase";
+//import { supabase } from "../lib/supabase";
 import { apiRequest } from "../api.js";
 
 import { TfiAlignJustify } from "react-icons/tfi";
@@ -107,29 +107,29 @@ function CanvasBoard(){
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
     /***************************************************************************/
     /** This function loads all saved canvas notes from Supabase when the board opens */
-    const fetchCanvasNotes = async () => {
-        const { data, error } = await supabase
-            .from("canvas_notes")
-            .select("*")
-            .order("created_at", { ascending: true });
+    // const fetchCanvasNotes = async () => {
+    //     const { data, error } = await supabase
+    //         .from("canvas_notes")
+    //         .select("*")
+    //         .order("created_at", { ascending: true });
 
-        if (error) {
-            console.error("Failed to fetch canvas notes:", error);
-            return;
-        }
+    //     if (error) {
+    //         console.error("Failed to fetch canvas notes:", error);
+    //         return;
+    //     }
 
-        const formattedNotes = data.map((note) => ({
-            id: note.id,
-            documentId: note.document_id,
-            title: note.title,
-            body: note.body,
-            x: note.x_position,
-            y: note.y_position,
-            selected: note.selected,
-        }));
+    //     const formattedNotes = data.map((note) => ({
+    //         id: note.id,
+    //         documentId: note.document_id,
+    //         title: note.title,
+    //         body: note.body,
+    //         x: note.x_position,
+    //         y: note.y_position,
+    //         selected: note.selected,
+    //     }));
 
-        setNotes(formattedNotes);
-    };
+    //     setNotes(formattedNotes);
+    // };
     /** When file upload success it will be package in the way we want so later can put into the PGSQL*/
     const handleUploadSuccess = (uploadedFile) => {
         const newFile = {
@@ -178,41 +178,64 @@ function CanvasBoard(){
     /***************************************************************************/
     /** This function will send a selected database document to the main board and save it to Supabase */
     const handleSendDocToBoard = async (doc) => {
-        const x = 300 + notes.length * 30;
-        const y = 120 + notes.length * 30;
-
-        const { data, error } = await supabase
-            .from("canvas_notes")
-            .insert([
-                {
-                    document_id: doc.id,
-                    title: doc.title,
-                    body: doc.description || "Note from database source.",
-                    x_position: x,
-                    y_position: y,
-                    selected: false,
-                },
-            ])
-            .select()
-            .single();
-
-        if (error) {
-            console.error("Failed to save note:", error);
-            return;
-        }
-
-        const newNote = {
-            id: data.id,
-            documentId: data.document_id,
-            title: data.title,
-            body: data.body,
-            x: data.x_position,
-            y: data.y_position,
-            selected: data.selected,
+        const newNoteData = {
+            title: doc.title,
+            body: doc.description || "Note from database source.",
+            user_note: "",
+            x: 300 + notes.length * 30,
+            y: 120 + notes.length * 30,
         };
 
-        setNotes((prevNotes) => [...prevNotes, newNote]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+        } catch (error) {
+            console.error("Create database note error:", error);
+            alert("Failed to send document to board.");
+        }
     };
+    // const handleSendDocToBoard = async (doc) => {
+    //     const x = 300 + notes.length * 30;
+    //     const y = 120 + notes.length * 30;
+
+    //     const { data, error } = await supabase
+    //         .from("canvas_notes")
+    //         .insert([
+    //             {
+    //                 document_id: doc.id,
+    //                 title: doc.title,
+    //                 body: doc.description || "Note from database source.",
+    //                 x_position: x,
+    //                 y_position: y,
+    //                 selected: false,
+    //             },
+    //         ])
+    //         .select()
+    //         .single();
+
+    //     if (error) {
+    //         console.error("Failed to save note:", error);
+    //         return;
+    //     }
+
+    //     const newNote = {
+    //         id: data.id,
+    //         documentId: data.document_id,
+    //         title: data.title,
+    //         body: data.body,
+    //         x: data.x_position,
+    //         y: data.y_position,
+    //         selected: data.selected,
+    //     };
+
+    //     setNotes((prevNotes) => [...prevNotes, newNote]);
+    // };
     /***************************************************************************/
     /** This function will count the number of note been selected */
     const selectedNotesCount = notes.filter((note) => note.selected).length;
@@ -448,15 +471,15 @@ function CanvasBoard(){
             .filter((note) => note.selected)
             .map((note) => note.id);
 
-        if (selectedNoteIds.length === 0) {
+        if (selectedNoteId.length === 0) {
             return;
         }
 
         const deleteResults = await Promise.all(
-            selectedNoteIds.map((noteId) => deleteNoteFromDatabase(noteId))
+            selectedNoteId.map((noteId) => deleteNoteFromDatabase(noteId))
         );
 
-        const successfullyDeletedIds = selectedNoteIds.filter(
+        const successfullyDeletedIds = selectedNoteId.filter(
             (noteId, index) => deleteResults[index]
         );
 

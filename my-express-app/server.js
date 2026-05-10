@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import pool from "./db.js";
 import noteRoute from "./routes/noteRoutes.js";
+import documentRoutes from "./routes/documentRoutes.js"
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get("/api/test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoute);
+app.use("/api/documents", documentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
