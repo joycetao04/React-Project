@@ -1,0 +1,88 @@
+import express from "express";
+import pool from "../db.js";
+import authMiddleware from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+router.get("/", authMiddleware, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `select id, from_note_id, to_note_id, created_at from public.note_links where user_id = $1 order by created_at asc`, [req.user.id]
+        );
+        res.json({
+            links: result.rows,
+        });
+    } catch (error) {
+        console.error("Get link error:", error);
+        res.status(500).json({
+            error: "Server error while getting links.",
+        });
+    }
+});
+
+router.post("/", authMiddleware, async (req, res) => {
+    const { from_note_id, to_note_id } = req.body;
+
+    if (!from_note_id || !to_note_id) {
+        return res.status(400).json({
+            error: "from_note_id and to_note_id are required.",
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `insert into public.note_links (user_id, from_note_id, to_note_id)
+             values ($1, $2, $3)
+             on conflict (user_id, from_note_id, to_note_id) do nothing
+             returning id, from_note_id, to_note_id, created_at`,
+            [req.user.id, from_note_id, to_note_id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(409).json({
+                error: "Link already exists.",
+            });
+        }
+
+        res.status(201).json({
+            message: "Link created successfully.",
+            link: result.rows[0],
+        });
+    } catch (error) {
+        console.error("Create link error:", error);
+        res.status(500).json({
+            error: "Server error while creating link.",
+        });
+    }
+});
+
+router.delete("/:id", authMiddleware, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `delete from public.note_links
+             where id = $1 and user_id = $2
+             returning id`,
+            [id, req.user.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: "Link not found.",
+            });
+        }
+
+        res.json({
+            message: "Link deleted successfully.",
+            deletedLinkId: result.rows[0].id,
+        });
+    } catch (error) {
+        console.error("Delete link error:", error);
+        res.status(500).json({
+            error: "Server error while deleting link.",
+        });
+    }
+});
+
+export default router;

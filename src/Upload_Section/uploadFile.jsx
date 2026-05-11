@@ -5,6 +5,7 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
   const [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState(0);
   const [closing, setClosing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -15,6 +16,7 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
     setFileName("");
     setFile(null);
     setProgress(0);
+    setIsUploading(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -22,6 +24,10 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
   };
 
   const closeModal = () => {
+    if (isUploading) {
+      return;
+    }
+
     setClosing(true);
 
     setTimeout(() => {
@@ -107,18 +113,30 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
   };
 
   const uploadToBackend = async () => {
+    if (isUploading) {
+      return;
+    }
+
     if (!file) {
       alert("No file selected");
       return;
     }
-    
+
+    setIsUploading(true);
+    setProgress(1);
 
     const formData = new FormData();
     formData.append("file", file);
 
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", "http://localhost:8000/upload");
+    xhr.open("POST", "http://localhost:5000/api/files/ingest");
+
+    const token = localStorage.getItem("nexo_token");
+
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
@@ -128,14 +146,32 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
     };
 
     xhr.onload = () => {
-      console.log("Upload complete");
-      if (onUploadSuccess) {
-        onUploadSuccess(file);
+      setIsUploading(false);
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        let responseData = null;
+
+        try {
+          responseData = JSON.parse(xhr.responseText);
+        } catch (error) {
+          console.error("Failed to parse upload response:", error);
+        }
+
+        console.log("Upload complete", responseData);
+
+        if (onUploadSuccess) {
+          onUploadSuccess(file, responseData);
+        }
+
+        closeModal();
+      } else {
+        console.error("Upload failed:", xhr.responseText);
+        alert(xhr.responseText || "Upload failed");
       }
-      closeModal();
     };
 
     xhr.onerror = () => {
+      setIsUploading(false);
       console.error("Upload failed");
       alert("Upload failed");
     };
@@ -161,6 +197,7 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
               className="upload-close-btn"
               onClick={closeModal}
               aria-label="Close"
+              disabled={isUploading}
             >
               ×
             </button>
@@ -169,8 +206,8 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
           <div className="upload-divider" />
 
           <div
-            className={`upload-drop-zone ${dragging ? "drag-active" : ""}`}
-            onClick={handleClick}
+            className={`upload-drop-zone ${dragging ? "drag-active" : ""} ${isUploading ? "uploading" : ""}`}
+            onClick={isUploading ? undefined : handleClick}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -202,11 +239,11 @@ function UploadFile({ showModal, onClose, onUploadSuccess}) {
           </div>
 
           <div className="upload-footer">
-            <button className="upload-cancel-btn" onClick={closeModal}>
+            <button className="upload-cancel-btn" onClick={closeModal} disabled={isUploading}>
               Cancel
             </button>
 
-            <button className="upload-done-btn" onClick={uploadToBackend}>
+            <button className="upload-done-btn" onClick={uploadToBackend} disabled={isUploading}>
               Done
             </button>
           </div>

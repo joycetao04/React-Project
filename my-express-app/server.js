@@ -4,11 +4,22 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import pool from "./db.js";
 import noteRoute from "./routes/noteRoutes.js";
-import documentRoutes from "./routes/documentRoutes.js"
+import documentRoutes from "./routes/documentRoutes.js";
+import linkRoutes from "./routes/linkRountes.js";
+import aiRoutes from "./routes/aiRoutes.js";
+import fileRoutes from "./routes/fileRoutes.js";
+
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(cors({
     origin: "http://localhost:5173",
@@ -35,6 +46,9 @@ app.get("/api/test", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoute);
 app.use("/api/documents", documentRoutes);
+app.use("/api/links", linkRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/files", fileRoutes)
 
 const PORT = process.env.PORT || 5000;
 

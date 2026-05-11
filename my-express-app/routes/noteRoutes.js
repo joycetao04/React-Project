@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/", authMiddleware, async (req,res) => {
     try {
         const result = await pool.query(
-            `select id, title, body, user_note, x, y, created_at, updated_at from public.notes where user_id = $1 order by created_at asc`, [req.user.id]
+            `select id, title, body, user_note, x, y, source_type, source_name, file_url, file_size, chunks_added, db_total, created_at, updated_at from public.notes where user_id = $1 order by created_at asc`, [req.user.id]
         );
 
         res.json({
@@ -22,7 +22,7 @@ router.get("/", authMiddleware, async (req,res) => {
 });
 
 router.post("/", authMiddleware, async (req, res) => {
-    const {title, body, user_note, x, y} = req.body;
+    const {title, body, user_note, x, y, source_type, source_name, file_url, file_size, chunks_added, db_total,} = req.body;
 
     if (!title) {
         return res.status(400).json({
@@ -32,7 +32,28 @@ router.post("/", authMiddleware, async (req, res) => {
 
     try {
         const result = await pool.query(
-            `insert into public.notes (user_id, title, body, user_note, x, y) values ($1, $2, $3, $4, $5, $6) returning id, title, body, user_note, x, y, created_at, updated_at`, [req.user.id, title, body|| "", user_note || "", x ?? 0, y ?? 0]
+            `insert into public.notes
+                (user_id, title, body, user_note, x, y, source_type, source_name, file_url, file_size, chunks_added, db_total)
+            values
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            returning
+                id, title, body, user_note, x, y,
+                source_type, source_name, file_url, file_size, chunks_added, db_total,
+                created_at, updated_at`,
+            [
+                req.user.id,
+                title,
+                body || "",
+                user_note || "",
+                x ?? 0,
+                y ?? 0,
+                source_type || "pdf",
+                source_name || title,
+                file_url || null,
+                file_size || null,
+                chunks_added || null,
+                db_total || null,
+            ]
         );
 
         res.status(201).json({
@@ -62,7 +83,10 @@ router.patch("/:id", authMiddleware, async (req, res) => {
                 y = coalesce($5, y),
                 updated_at = now()
              where id = $6 and user_id = $7
-             returning id, title, body, user_note, x, y, created_at, updated_at`,
+             returning
+            id, title, body, user_note, x, y,
+            source_type, source_name, file_url, file_size, chunks_added, db_total,
+            created_at, updated_at`,
             [
                 title ?? null,
                 body ?? null,
