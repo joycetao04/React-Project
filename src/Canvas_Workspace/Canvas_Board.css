@@ -298,6 +298,44 @@
 .Cabinet_File_Size {
     margin-right: 15px;
 }
+
+.Canvas_Note_Meta {
+    position: absolute;
+    left: 16px;
+    bottom: 12px;
+    margin: 0;
+    font-size: 10px;
+    color: #9b9b9b;
+}
+
+.Canvas_Note_Selected .Canvas_Note_Meta {
+    color: #d0d0d0;
+}
+
+.Note_Source_Content {
+    width: 100%;
+    height: calc(100% - 50px);
+    overflow: hidden;
+}
+
+.Note_PDF_Preview {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #d8d8d8;
+    background: white;
+}
+
+.Note_PDF_Preview iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.Note_Source_Text {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    overflow-y: auto;
+}
 /******************************************************************************/
 /* Here are the css for the Center Canvas note Card */
 
@@ -648,6 +686,58 @@
     padding: 0px 4px;
 }
 
+.Chat_Message_Text {
+    line-height: 1.65;
+    font-size: 14px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.Chat_Message_Text p {
+    margin: 0px 0px 10px 0px;
+}
+
+.Chat_Message_Text p:last-child {
+    margin-bottom: 0;
+}
+
+.Chat_Message_Text ul, .Chat_Message_Text ol {
+    margin: 8px 0px 12px 20px;
+    padding-left: 18px;
+}
+
+.Chat_Message_Text li {
+    margin-bottom: 6px;
+}
+
+.Chat_Message_Text strong {
+    font-weight: 700;
+}
+
+.Chat_Message_Text h1,
+.Chat_Message_Text h2,
+.Chat_Message_Text h3 {
+    margin: 12px 0px 8px 0px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+
+.Chat_Message_Text code {
+    font-family: Consolas, Monaco, monospace;
+    background-color: #eeeeee;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.Chat_Message_AI {
+    max-width: 86%;
+}
+
+.Chat_Message_User {
+    max-width: 75%;
+}
 /**********************************************************************/
 /* Here are the css for the Hover Preview Card */
 

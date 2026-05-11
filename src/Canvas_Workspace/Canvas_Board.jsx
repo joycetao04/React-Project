@@ -5,6 +5,7 @@ import DatabaseSearch from "../Upload_Section/databaseSearch.jsx";
 import "./Canvas_Board.css"
 //import { supabase } from "../lib/supabase";
 import { apiRequest } from "../api.js";
+import ReactMarkdown from "react-markdown";
 
 import { TfiAlignJustify } from "react-icons/tfi";
 import { VscArrowUp } from "react-icons/vsc";
@@ -102,6 +103,7 @@ function CanvasBoard(){
     const [openedNoteId, setOpenedNoteId] = useState(null);
     const [noteDraft, setNoteDraft] = useState("");
     const editorRef = useRef(null);
+    const chatBottomRef = useRef(null);
 
     const NOTE_WIDTH = 185; /** Currently I set the width of the note to be 185px */
     const NOTE_HEIGHT = 160; /** Currently I set the Height of the note to be 160px */
@@ -131,15 +133,68 @@ function CanvasBoard(){
     //     setNotes(formattedNotes);
     // };
     /** When file upload success it will be package in the way we want so later can put into the PGSQL*/
-    const handleUploadSuccess = (uploadedFile) => {
-        const newFile = {
-            id: Date.now(),
+    const handleUploadSuccess = async (uploadedFile, uploadResult) => {
+        const newNoteData = {
             title: uploadedFile.name,
-            date: new Date().toISOString().slice(0,10),
-            size: `${Math.round(uploadedFile.size / 1024)} KB`,
+            body: `File name: ${uploadResult?.file || uploadedFile.name}`,
+            user_note: "",
+            x: 260 + notes.length * 35,
+            y: 120 + notes.length * 35,
+            source_type: "pdf",
+            source_name: uploadResult?.file || uploadedFile.name,
+            file_url: uploadResult?.fileUrl || "",
+            file_size: uploadResult?.fileSize || uploadedFile.size,
+            chunks_added: uploadResult?.chunks_added ?? null,
+            db_total: uploadResult?.db_total ?? null,
         };
 
-        setFiles((prevFiles) => [newFile, ...prevFiles]);
+        try {
+            const data = await apiRequest("/notes", {
+                method: "POST",
+                body: JSON.stringify(newNoteData),
+            });
+
+            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
+
+            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
+
+            const newCabinetFile = convertNoteToCabinetFile(newCanvasNote);
+            setFiles((prevFiles) => [newCabinetFile, ...prevFiles]);
+        } catch (error) {
+            console.error("Create uploaded PDF note error:", error);
+            alert("PDF uploaded, but failed to create note on board.");
+        }
+    };
+    /***************************************************************************/
+    const formatFileSize = (bytes) => {
+        if (!bytes) return "";
+
+        const kb = bytes / 1024;
+        if (kb < 1024) {
+            return `${Math.round(kb)} KB`;
+        }
+
+        const mb = kb / 1024;
+        return `${mb.toFixed(1)} MB`;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+
+        return new Date(dateString).toISOString().slice(0, 10);
+    };
+
+    const convertNoteToCabinetFile = (note) => {
+        return {
+            id: note.id,
+            title: note.title,
+            date: formatDate(note.createdAt),
+            size: formatFileSize(note.fileSize),
+            sourceType: note.sourceType,
+            sourceName: note.sourceName,
+            fileUrl: note.fileUrl,
+            noteId: note.id,
+        };
     };
     /***************************************************************************/
     /** When click the Note if the current note is selected then change back to light color else change to darker color */
@@ -152,28 +207,22 @@ function CanvasBoard(){
     };
     /***************************************************************************/
     /** When click the File on the left it will show up on the Canvas (x and y in the function I set it this way so it will keep shift buttom right a bit so it wont overlap) */
-    const handleFileClick = async (file) => {
-        const newNoteData = {
-            title: file.title,
-            body: "Note from the source.",
-            user_note: "",
-            x: 300 + notes.length * 30,
-            y: 120 + notes.length * 30,
-        };
+    const handleFileClick = (file) => {
+        const existingNote = notes.find((note) => note.id === file.noteId);
 
-        try {
-            const data = await apiRequest("/notes", {
-                method: "POST",
-                body: JSON.stringify(newNoteData),
-            });
-
-            const newCanvasNote = convertDatabaseNoteToCanvasNote(data.note);
-
-            setNotes((prevNotes) => [...prevNotes, newCanvasNote]);
-        } catch (error) {
-            console.error("Create note error:", error);
-            alert("Failed to create note.");
+        if (!existingNote) {
+            return;
         }
+
+        setNotes((prevNotes) =>
+            prevNotes.map((note) =>
+                note.id === existingNote.id
+                    ? { ...note, selected: true }
+                    : note
+            )
+        );
+
+        handleOpenNote(existingNote);
     };
     /***************************************************************************/
     /** This function will send a selected database document to the main board and save it to Supabase */
@@ -246,10 +295,12 @@ function CanvasBoard(){
     /***************************************************************************/
     const openedNote = notes.find((note) => note.id === openedNoteId);
     /***************************************************************************/
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (!chatInput.trim()) {
             return;
         };
+
+        const question = chatInput;
 
         const userMessage = {
             id: Date.now(),
@@ -257,20 +308,92 @@ function CanvasBoard(){
             text: chatInput,
         };
 
+        const chatHistoryForApi = chatMessages.slice(-8).map((message) => ({
+            role: message.role,
+            content: message.text,
+        }));
+
         setChatMessages((prevMessages) => [...prevMessages, userMessage]);
         setChatInput("");
         setIsAiThinking(true);
 
-        setTimeout(() => {
-            const aiMessage = {
-                id: Date.now()+1,
-                role: "ai",
-                text: selectedNotesCount > 0 ? `This answer is based on ${selectedNotesCount} selected note(s).` : "This is a general answer. Later, if no note is selected, this can call a general AI endpoint.",
-            };
-            setChatMessages((prevMessages) => [...prevMessages, aiMessage]);
-            setIsAiThinking(false);
-        }, 900);
+        try {
+            // const isGeneralGreeting = /^(hi|hello|hey|how are you|thanks|thank you)\??$/i.test(question.trim());
+            // const shouldUseRag = selectedNotesCount > 0 && !isGeneralGreeting;
 
+            // console.log("CHAT DEBUG:", {
+            //     question,
+            //     selectedNotesCount,
+            //     use_rag: shouldUseRag,
+            //     chat_history: chatHistoryForApi,
+            // });
+
+            const selectedSourceNames = notes
+                .filter((note) => note.selected && note.sourceName)
+                .map((note) => note.sourceName);
+
+            const uniqueSelectedSourceNames = [...new Set(selectedSourceNames)];
+
+            const shouldUseRag = uniqueSelectedSourceNames.length > 0;
+
+            const sourceFilter =
+                uniqueSelectedSourceNames.length === 1
+                    ? uniqueSelectedSourceNames[0]
+                    : "";
+
+            const selectedSourcesText =
+                uniqueSelectedSourceNames.length > 0
+                    ? uniqueSelectedSourceNames.map((name, index) => `${index + 1}. ${name}`).join("\n")
+                    : "No selected sources.";
+
+            const isAskingSelectedSources =
+                /(source|sources|doc|docs|document|documents|selected|selecting|file|files|name|names)/i.test(question);
+
+            const enhancedQuestion = shouldUseRag
+                ? `The user has selected the following source files:\n${selectedSourcesText}\n\nUser question: ${question}`
+                : question;
+
+            console.log("CHAT RAG DEBUG:", {
+                question,
+                shouldUseRag,
+                selectedSources: uniqueSelectedSourceNames,
+                sourceFilter,
+                enhancedQuestion,
+            });
+
+            const data = await apiRequest("/ai/query-text", {
+                method: "POST",
+                body: JSON.stringify({
+                    question: enhancedQuestion,
+                    top_k: 3,
+                    use_rag: shouldUseRag,
+                    source_filter: sourceFilter,
+                    chat_history: chatHistoryForApi,
+                }),
+            });
+
+            const aiMessage = {
+                id: Date.now() + 1,
+                role: "ai",
+                text: data.answer || "No answer returned.",
+                sources: data.sources || [],
+                mode: data.mode,
+            };
+
+            setChatMessages((prevMessages) => [...prevMessages, aiMessage]);
+        } catch (error) {
+            console.error("AI chat error:", error);
+
+            const errorMessage = {
+                id: Date.now() + 1,
+                role: "ai",
+                text: "Failed to get an answer from the AI service."
+            };
+
+            setChatMessages((prevMessages) => [...prevMessages, errorMessage]);
+        } finally {
+            setIsAiThinking(false);
+        }
     };
     /***************************************************************************/
     const handleChatKeyDown = (event) => {
@@ -311,6 +434,11 @@ function CanvasBoard(){
             user_note: "",
             x,
             y,
+
+            source_type: file.sourceType || "pdf",
+            source_name: file.sourceName || file.title,
+            file_url: file.fileUrl || "",
+            file_size: file.fileSize || null,
         };
 
         try {
@@ -435,7 +563,7 @@ function CanvasBoard(){
         setBoardScale(1);
     };
     /***************************************************************************/
-    const handleLinkSelectedNotes = () => {
+    const handleLinkSelectedNotes = async () => {
         const selectedNotes = notes.filter((note) => note.selected);
 
         if (selectedNotes.length < 2) {
@@ -449,16 +577,18 @@ function CanvasBoard(){
             const fromNoteId = selectedNotes[i].id;
             const toNoteId = selectedNotes[i + 1].id;
 
-            if (!linkAlreadyExists(fromNoteId,toNoteId)) {
-                newLinks.push({
-                    id: Date.now() + i,
-                    fromNoteId: selectedNotes[i].id,
-                    toNoteId: selectedNotes[i + 1].id,
-                });
+            if (!linkAlreadyExists(fromNoteId, toNoteId)) {
+                const createdLink = await createLinkInDatabase(fromNoteId, toNoteId);
+
+                if (createdLink) {
+                    newLinks.push(createdLink);
+                }
             }
         }
 
-        setLinks((prevLinks) => [...prevLinks, ...newLinks]);
+        if (newLinks.length > 0) {
+            setLinks((prevLinks) => [...prevLinks, ...newLinks]);
+        }
     };
     /***************************************************************************/
     const getNoteById = (noteId) => {
@@ -485,6 +615,10 @@ function CanvasBoard(){
 
         setNotes((prevNotes) =>
             prevNotes.filter((note) => !successfullyDeletedIds.includes(note.id))
+        );
+
+        setFiles((prevFiles) =>
+            prevFiles.filter((file) => !successfullyDeletedIds.includes(file.noteId))
         );
 
         setLinks((prevLinks) =>
@@ -556,7 +690,35 @@ function CanvasBoard(){
             x: Number(note.x),
             y: Number(note.y),
             selected: false,
+
+            sourceType: note.source_type || "pdf",
+            sourceName: note.source_name || note.title,
+            fileUrl: note.file_url || "",
+            fileSize: note.file_size || null,
+            chunksAdded: note.chunks_added || null,
+            dbTotal: note.db_total || null,
+            createdAt: note.created_at,
         };
+    };
+    /***************************************************************************/
+    const convertDatabaseLinkToCanvasLink = (link) => {
+        return {
+            id: link.id,
+            fromNoteId: link.from_note_id,
+            toNoteId: link.to_note_id,
+        };
+    };
+    /***************************************************************************/
+    const loadLinksFromDatabase = async () => {
+        try {
+            const data = await apiRequest("/links");
+
+            const databaseLinks = data.links.map(convertDatabaseLinkToCanvasLink);
+
+            setLinks(databaseLinks);
+        } catch (error) {
+            console.error("Load links error:", error);
+        }
     };
     /***************************************************************************/
     const updateNoteInDatabase = async (noteId, updates) => {
@@ -587,6 +749,23 @@ function CanvasBoard(){
         }
     };
     /***************************************************************************/
+    const createLinkInDatabase = async (fromNoteId, toNoteId) => {
+        try {
+            const data = await apiRequest("/links", {
+                method: "POST",
+                body: JSON.stringify({
+                    from_note_id: fromNoteId,
+                    to_note_id: toNoteId,
+                }),
+            });
+
+            return convertDatabaseLinkToCanvasLink(data.link);
+        } catch (error) {
+            console.error("Create link error:", error);
+            return null;
+        }
+    };
+    /***************************************************************************/
     const loadNotesFromDatabase = async () => {
         try {
             const data = await apiRequest("/notes");
@@ -594,6 +773,12 @@ function CanvasBoard(){
             const databaseNotes = data.notes.map(convertDatabaseNoteToCanvasNote);
 
             setNotes(databaseNotes);
+
+            const cabinetFiles = databaseNotes
+                .filter((note) => note.fileUrl || note.sourceName)
+                .map(convertNoteToCabinetFile);
+
+            setFiles(cabinetFiles);
         } catch (error) {
             console.error("Load notes error:", error);
         }
@@ -601,6 +786,7 @@ function CanvasBoard(){
     /***************************************************************************/
     useEffect(() => {
         loadNotesFromDatabase();
+        loadLinksFromDatabase();
     }, []);
     /***************************************************************************/
     useEffect(() => {
@@ -609,6 +795,13 @@ function CanvasBoard(){
             setNoteDraft(openedNote.userNote || "");
         }
     }, [openedNoteId]);
+    /***************************************************************************/
+    useEffect(() => {
+        chatBottomRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "end",
+        });
+    }, [chatMessages, isAiThinking]);
     /***************************************************************************/
     /** When click "Delete" or "Backspace" it will delete the selected note */
     useEffect(() => {
@@ -717,7 +910,8 @@ function CanvasBoard(){
                                 style={{left: `${note.x}px`, top: `${note.y}px`,}}
                             > 
                                 <p className="Canvas_Note_Title">{note.title}</p>
-                                <p className="Canvas_Note_Body">{note.body}</p>
+                                <p className="Canvas_Note_Body">{note.body.length > 90 ? `${note.body.slice(0, 90)}...` : note.body}</p>
+                                <p className="Canvas_Note_Meta">PDF Source</p>
                                 <div className="Canvas_Note_Dot"></div>
                             </div>
                         ))}
@@ -809,7 +1003,16 @@ function CanvasBoard(){
                                         : "Chat_Message_AI"
                                     }`}
                                     >
-                                    {message.text}
+                                        {message.role === "ai" ? (
+                                            <div className="Chat_Message_Text">
+                                                <ReactMarkdown>{message.text}</ReactMarkdown>
+                                            </div>
+                                        ) : ( 
+                                            <div className="Chat_Message_Text">
+                                                {message.text}
+                                            </div>
+                                        )}
+                                    
                                     </div>
                                 </div>
                                 ))}
@@ -822,6 +1025,7 @@ function CanvasBoard(){
                                     </div>
                                 </div>
                                 )}
+                                <div ref={chatBottomRef} />
                             </div>
                             )}
                         </div>
@@ -873,9 +1077,22 @@ function CanvasBoard(){
                             <div className="Note_Source_Column">
                                 <p className="Note_Modal_Label">SOURCE TEXT</p>
 
-                                <p className="Note_Source_Text">{openedNote.body}</p>
+                                <div className="Note_Source_Content">
+                                    {openedNote.sourceType === "pdf" && openedNote.fileUrl ? (
+                                        <div className="Note_PDF_Preview">
+                                            <iframe
+                                                src={openedNote.fileUrl}
+                                                title={openedNote.title}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="Note_Source_Text">
+                                            {openedNote?.body || "No source preview available."}
+                                        </p>
+                                    )}
+                                </div>
 
-                                <p className="Note_Source_Text">Later, this area will show extracted PDF text, OCR results, VLM description, or selected source chunks from PgSQPL.</p>
+                                
                             </div>
 
                             <div className="Note_User_Column">
